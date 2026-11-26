@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "2.3",
-  "apk": "https://github.com/TotesTierux/nutrifit/releases/download/v2.3/NutriFit.apk",
-  "notes": "Schnellstart-Kacheln in den Schnelleinstellungen\nHomescreen-Widget für Gewohnheiten und Training\nAutomatische Updates\nZiffernblätter für die Xiaomi Watch S5"
+  "versionCode": 8,
+  "versionName": "2.4",
+  "apk": "https://raw.githubusercontent.com/TotesTierux/nutrifit/main/apk/NutriFit-2.4.apk",
+  "notes": "Neuer Bereich „Planer“: Wochenplan, Einkaufsliste und Rezepte\n24 Rezeptvorschläge plus KI-Rezepte mit Gemini\nZutaten aus dem Wochenplan mit einem Tipp auf die Einkaufsliste\nKonto per E-Mail: Daten auf allen Geräten\nFamilie gründen und Plan, Liste und Rezepte gemeinsam nutzen"
 }

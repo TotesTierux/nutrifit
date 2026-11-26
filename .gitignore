@@ -1,3 +1,4 @@
 *.keystore
 build/
 *.apk
+!apk/*.apk

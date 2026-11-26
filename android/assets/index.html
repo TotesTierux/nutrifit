@@ -30,6 +30,23 @@ header.top{display:flex;align-items:center;justify-content:space-between;padding
 .habbtn{min-width:104px;padding:10px 14px;font-size:15px;font-variant-numeric:tabular-nums}
 .seg button{font-size:12.5px}
 #modeSeg button{font-size:11.5px;padding:8px 1px;white-space:nowrap}
+nav.tabs .fab{flex:none}
+.pill{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--brand);color:#fff;font-size:11px;line-height:18px}
+.pslot{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.pslot:first-of-type{border-top:0}
+.pslot .pl{width:26px;text-align:center;font-size:18px;padding-top:4px}
+.pslot .pe{flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pchip{border:0;background:var(--brandSoft);color:var(--ink);border-radius:10px;padding:7px 10px;font-size:13px;text-align:left;max-width:100%}
+.pchip small{color:var(--muted)}
+.pchip.eaten{opacity:.6}
+.padd{border:1px dashed var(--line);background:none;border-radius:10px;width:34px;height:32px;color:var(--muted);font-size:16px}
+.sitem{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.sitem:first-of-type{border-top:0}
+.sitem .n{flex:1;min-width:0}.sitem .n small{color:var(--muted);font-size:12px}
+.sitem .sbox{width:24px;height:24px;border-radius:7px;border:2px solid var(--brand2);display:grid;place-items:center;color:#fff;font-size:14px;flex:none}
+.sitem.done .sbox{background:var(--brand2)}.sitem.done .n{text-decoration:line-through;color:var(--muted)}
+.rcard .ric{font-size:26px;width:36px;text-align:center}
+.syncb{font-size:16px;margin-left:6px;cursor:pointer;vertical-align:middle}
 .gear{border:0;width:38px;height:38px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);font-size:17px;display:grid;place-items:center}
 .gear.on{background:var(--brandSoft)}
 .datenav{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
@@ -83,7 +100,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;padding
 .btn:active{transform:scale(.98)}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:20}
 nav.tabs .in{display:flex;max-width:560px;width:100%;justify-content:space-around;align-items:center}
-nav.tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:4px 10px;min-width:62px}
+nav.tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:4px 2px;min-width:52px;flex:1}
 nav.tabs button .i{font-size:21px;filter:grayscale(1);opacity:.7}
 nav.tabs button.on{color:var(--brand);font-weight:700}
 nav.tabs button.on .i{filter:none;opacity:1}
@@ -261,6 +278,7 @@ h2.page{font-size:22px;letter-spacing:-.02em;margin:4px 2px 12px}
 
 <nav class="tabs hidden" id="tabs"><div class="in">
   <button data-tab="today" class="on"><span class="i">🏠</span>Heute</button>
+  <button data-tab="plan"><span class="i">📅</span>Planer</button>
   <button data-tab="train"><span class="i">🏋️</span>Training</button>
   <button class="fab" id="fab" aria-label="Mahlzeit hinzufügen"><span class="i">＋</span></button>
   <button data-tab="fast"><span class="i">⏱️</span>Fasten</button>
@@ -353,6 +371,7 @@ function save(){
   syncNotifs();
   syncHabitNotifs();
   pushQuick();
+  if(!syncNow.applying)schedulePush();
 }
 
 /* ===================== Hilfsfunktionen ===================== */
@@ -410,7 +429,8 @@ function render(){
   $("#tabs").classList.toggle("hidden",focus);
   $("#rest").style.bottom=focus?"calc(14px + env(safe-area-inset-bottom))":"";
   document.querySelectorAll("nav.tabs [data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
-  app.innerHTML=({today:todayHTML,train:trainHTML,stats:statsHTML,fast:fastHTML,profile:profileHTML})[tab]();
+  app.innerHTML=({today:todayHTML,plan:plannerHTML,train:trainHTML,stats:statsHTML,fast:fastHTML,profile:profileHTML})[tab]();
+  if(tab==="plan")bindPlanner();
   if(tab==="train"&&ui.view==="session")updProg();
   bindPage();
 }
@@ -435,7 +455,7 @@ function todayHTML(){
   MEALS.forEach(m=>{
     const items=d.meals[m.k]; const s=sumItems(items); const goal=Math.round(T.kcal*m.share);
     meals+=`<div class="meal"><div class="mealhead"><div class="ic">${m.ic}</div><div class="t"><b>${m.n}</b><span>${r0(s.kcal)} / ${goal} kcal</span></div><button class="addbtn" data-add="${m.k}" aria-label="${m.n} hinzufügen">+</button></div>
-    ${items.length?`<div class="items">${items.map((it,i)=>{const sc=foodScore(it);return`<div class="item"><span class="score" style="background:${sc.col}">${sc.L}</span><div class="n"><div>${esc(it.name)}</div><small>${r0(it.grams)} g · E ${r0(it.p)} · K ${r0(it.c)} · F ${r0(it.f)}</small></div><span class="k">${r0(it.kcal)}</span><button class="x" data-del="${m.k}:${i}" aria-label="Entfernen">×</button></div>`}).join("")}</div>`:""}</div>`;
+    ${items.length?`<div class="items">${items.map((it,i)=>{const sc=foodScore(it);return`<div class="item"><span class="score" style="background:${sc.col}">${sc.L}</span><div class="n"><div>${esc(it.name)}</div><small>${it.grams?r0(it.grams)+" g":esc(it.unit||"")} · E ${r0(it.p)} · K ${r0(it.c)} · F ${r0(it.f)}</small></div><span class="k">${r0(it.kcal)}</span><button class="x" data-del="${m.k}:${i}" aria-label="Entfernen">×</button></div>`}).join("")}</div>`:""}</div>`;
   });
   const ses=daySessions(curDate).map(s=>`<div class="item" data-go-detail="${s.id}" style="cursor:pointer"><span style="font-size:18px">🏋️</span><div class="n"><div>${esc(s.name)}</div><small>${Math.max(1,Math.round((s.end-s.start)/60000))} Min. · ${s.entries.reduce((k,e)=>k+e.sets.length,0)} Sätze · Training</small></div><span class="k">−${r0(sessionKcal(s))}</span><span class="muted" style="width:28px;text-align:center">›</span></div>`).join("");
   const activeBanner=F.active?`<div class="card" data-act="resume" style="background:var(--brand);color:#fff;cursor:pointer;display:flex;align-items:center;gap:10px"><span style="font-size:24px">🏋️</span><div style="flex:1"><b>Training läuft: ${esc(F.active.name)}</b><div class="small" style="opacity:.85">Tippen zum Fortsetzen</div></div><span style="font-size:20px">›</span></div>`:"";
@@ -536,6 +556,7 @@ function profileHTML(){
     <div class="kv"><span class="muted">Grundumsatz / Gesamtumsatz</span><span class="muted">${T.bmr} / ${T.tdee} kcal</span></div></div>
   <div class="card"><h3>Persönliche Daten</h3>${profileForm(p)}<button class="btn block" data-act="saveprofile">Speichern</button></div>
   <div class="card"><h3>Eigene Lebensmittel</h3>${S.custom.length?S.custom.map((f,i)=>`<div class="item"><div class="n"><div>${esc(f.name)}</div><small>${r0(f.kcal)} kcal · E ${r1(f.p)} · K ${r1(f.c)} · F ${r1(f.f)} je 100 g</small></div><button class="x" data-delcustom="${i}">×</button></div>`).join(""):`<div class="muted small">Eigene Lebensmittel legst du beim Hinzufügen unter „Eigenes“ an.</div>`}</div>
+  ${cloudCardHTML()}
   ${updateCardHTML()}
   ${geminiCardHTML()}
   ${fitSettingsHTML()}
@@ -543,7 +564,7 @@ function profileHTML(){
     <div class="muted small" style="margin-bottom:10px">Ernährung, Training und Fasten liegen nur lokal auf diesem Gerät. Sichere sie ab und zu per Backup – z. B. als Nachricht an dich selbst. Hier kannst du auch ein Backup aus der alten FitLog- oder NutriScan-App einfügen.</div>
     <div class="grid2"><button class="btn sec" data-act="export">Backup teilen</button><button class="btn sec" data-act="import">Backup einfügen</button></div>
     <button class="btn ghost block" style="margin-top:10px;color:var(--danger)" data-act="reset">Alle Daten löschen</button></div>
-  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.3 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
+  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.4 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
 }
 function profileForm(p){
   p=p||{sex:"f",age:30,height:170,weight:70,target:65,activity:1.375,goal:"lose"};
@@ -570,10 +591,11 @@ function readProfile(){
 function onboardingHTML(){
   return `<div class="onb">${headerHTML(false)}
   <div class="card"><h1>Willkommen 👋</h1><p class="muted" style="margin:0 0 4px;line-height:1.5">Ernährung, Training und Fasten in einer App: Scanne Barcodes, tracke deine Workouts mit Level und Abzeichen und erreiche dein Wunschgewicht. Erzähl uns kurz etwas über dich – daraus berechnen wir deine Tagesziele.</p></div>
-  <div class="card">${profileForm(null)}<button class="btn block" id="onbGo">Los geht's</button></div>
+  <div class="card">${profileForm(null)}<button class="btn block" id="onbGo">Los geht's</button><button class="btn ghost block" id="onbLogin" style="margin-top:8px">Ich habe schon ein Konto – anmelden</button></div>
   <div class="muted small" style="text-align:center">Deine Daten bleiben auf deinem Gerät – kein Konto nötig.</div></div>`;
 }
 function bindOnboarding(){
+  $("#onbLogin").onclick=()=>openLogin(false);
   $("#onbGo").onclick=()=>{const p=readProfile();if(!p)return;S.profile=p;S.weights=[{d:today(),kg:p.weight}];save();tab="today";render();toast("Profil angelegt – guten Appetit!")};
 }
 
@@ -586,9 +608,12 @@ function bindPage(){
     else if(t.dataset.q){nset()[t.dataset.q]=+t.value;save();render()}};
   app.onclick=e=>{
     const gd=e.target.closest("[data-go-detail]"); if(gd){go("detail",gd.dataset.goDetail);return}
+    if(plannerDivClick(e))return;
+    const sb=e.target.closest("span[data-act=syncnow]"); if(sb){syncNow(true);return}
     const cd=e.target.closest("[data-act=resume]"); if(cd){go("session");return}
     const b=e.target.closest("button"); if(!b||b.getAttribute("onclick"))return;
     const a=b.dataset.act;
+    if(plannerClick(b)||cloudClick(b))return;
     if(a==="updcheck"){b.disabled=true;b.textContent="Suche …";checkUpdate(true).then(()=>{if(tab==="profile")render()});return}
     if(a==="updshow"){openUpdate(updInfo);return}
     if(a==="gemsetup"){openGemSetup();return}
@@ -994,7 +1019,7 @@ function openWeigh(){
   });
 }
 function openExport(){
-  const txt=JSON.stringify({app:"nutrifit",v:2,nutri:S,fit:F});
+  const txt=JSON.stringify({app:"nutrifit",v:3,nutri:S,fit:F,planner:Object.assign({},P,{dirty:{}})});
   openSheet("Backup kopieren",`<div class="muted small" style="margin-bottom:8px">Teile oder kopiere diesen Text und füge ihn später (oder auf einem anderen Gerät) unter „Backup einfügen“ ein.</div><textarea class="inp" id="exTxt" rows="8" readonly>${esc(txt)}</textarea><div class="grid2" style="margin-top:10px"><button class="btn sec" id="exCopy">Kopieren</button>${NATIVE?`<button class="btn" id="exShare">Teilen …</button>`:""}</div>`,()=>{
     $("#exCopy").onclick=async()=>{if(NATIVE){NATIVE.copy(txt);toast("Kopiert ✓");return}try{await navigator.clipboard.writeText(txt);toast("Kopiert ✓")}catch(e){const t=$("#exTxt");t.focus();t.select();toast("Text markiert – jetzt kopieren")}};
     const sh=$("#exShare"); if(sh)sh.onclick=()=>NATIVE.share("NutriFit Backup "+today(),txt);
@@ -1009,7 +1034,7 @@ function openImport(){
 function applyBackup(txt){
   let d; try{d=JSON.parse(String(txt||"").trim())}catch(e){return null}
   if(!d||typeof d!=="object")return null;
-  if(d.app==="nutrifit"){if(d.nutri&&d.nutri.profile)S=Object.assign(blank(),d.nutri);if(d.fit&&d.fit.exercises){F=d.fit;load2()}save();fitSave(true);tab="today";curDate=today();ui.view="home";render();return"Backup wiederhergestellt ✓"}
+  if(d.app==="nutrifit"){if(d.planner&&d.planner.recipes){P=Object.assign(blankP(),d.planner);markAllDirtyLocal()}if(d.nutri&&d.nutri.profile)S=Object.assign(blank(),d.nutri);if(d.fit&&d.fit.exercises){F=d.fit;load2()}save();fitSave(true);tab="today";curDate=today();ui.view="home";render();return"Backup wiederhergestellt ✓"}
   if(d.exercises&&d.sessions){F=d;load2();fitSave(true);tab="train";ui.view="home";render();return`FitLog übernommen: ${F.sessions.length} Trainings ✓`}
   if(d.profile){S=Object.assign(blank(),d);save();tab="today";curDate=today();render();return"Ernährungsdaten wiederhergestellt ✓"}
   return null;
@@ -1035,10 +1060,11 @@ function fitSettingsHTML(){
    <div class="muted small" style="margin:12px 0 4px">Eigene Übungen</div>
    ${custom.length?custom.map(e=>`<div class="item"><div class="n"><div>${esc(e.name)}</div><small>${TYPES[e.type]}</small></div><button class="x" onclick="delEx('${e.id}')">×</button></div>`).join(""):`<div class="muted small">Noch keine – du kannst sie beim Hinzufügen einer Übung anlegen.</div>`}</div>`;
 }
+function markAllDirtyLocal(){["recipes","plan","shop"].forEach(c=>Object.keys(P[c]).forEach(id=>P[c][id]&&(P.dirty[c+"/"+id]=1)));saveP()}
 function openReset(){
   openSheet("Alle Daten löschen?",`<p style="margin-top:0;line-height:1.5">Profil, Mahlzeiten, Gewicht, Fastenverlauf sowie alle Trainings, Erfolge und Rekorde werden unwiderruflich gelöscht.</p><div class="grid2"><button class="btn ghost" id="rsNo">Abbrechen</button><button class="btn danger" id="rsYes">Löschen</button></div>`,()=>{
     $("#rsNo").onclick=closeSheet;
-    $("#rsYes").onclick=()=>{S=blank();F=defaults();fitSave(true);save();closeSheet();tab="today";ui.view="home";render()};
+    $("#rsYes").onclick=()=>{S=blank();F=defaults();fitSave(true);P=blankP();saveP();save();closeSheet();tab="today";ui.view="home";render()};
   });
 }
 
@@ -1237,7 +1263,7 @@ function pushQuick(){
   }catch(e){}
 }
 const UPDATE_URL="https://raw.githubusercontent.com/TotesTierux/nutrifit/main/update.json";
-const APP_VERSION="2.3";
+const APP_VERSION="2.4";
 function appCode(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 let updInfo=null;
 async function checkUpdate(manual){
@@ -1279,6 +1305,612 @@ function updateCardHTML(){
   return`<div class="card"><h3>🔄 App-Updates</h3><div class="kv"><span>Installiert</span><b>NutriFit ${APP_VERSION}</b></div>
     ${updInfo&&+updInfo.versionCode>appCode()?`<button class="btn block" style="margin-top:8px" data-act="updshow">Update auf ${esc(updInfo.versionName)} installieren</button>`:`<button class="btn sec block" style="margin-top:8px" data-act="updcheck">Nach Updates suchen</button>`}
     <div class="muted small" style="margin-top:8px">Die App sucht automatisch alle paar Stunden nach neuen Versionen.</div></div>`;
+}
+
+/* Eingebaute Rezeptvorschläge – Nährwerte pro Portion (Richtwerte) */
+const RECIPE_LIB=[
+["Overnight Oats mit Beeren","🥣",5,1,420,22,58,10,"frühstück,vegetarisch,schnell","60|g|Haferflocken;150|g|Skyr;100|ml|Milch;80|g|Heidelbeeren;1|TL|Honig;10|g|Chiasamen","Haferflocken, Chiasamen, Skyr und Milch verrühren.|Über Nacht im Kühlschrank quellen lassen.|Morgens mit Beeren und Honig toppen."],
+["Rührei mit Vollkornbrot","🍳",10,1,450,28,30,23,"frühstück,vegetarisch,eiweiß","3|Stück|Eier;1|Scheibe|Vollkornbrot;30|g|Spinat;1|Stück|Tomate;5|g|Butter","Eier verquirlen, salzen und pfeffern.|Spinat in Butter kurz anbraten, Eier dazugeben und stocken lassen.|Mit Brot und Tomate servieren."],
+["Skyr-Bowl mit Banane & Nüssen","🍌",5,1,380,28,45,10,"frühstück,vegetarisch,schnell,eiweiß","250|g|Skyr;1|Stück|Banane;15|g|Walnüsse;1|TL|Zimt","Skyr in eine Schale geben.|Banane in Scheiben schneiden, mit Nüssen und Zimt darübergeben."],
+["Protein-Pfannkuchen","🥞",15,2,360,26,40,9,"frühstück,vegetarisch,eiweiß","80|g|Haferflocken;250|g|Magerquark;2|Stück|Eier;1|Stück|Banane;1|TL|Backpulver;100|g|Beeren","Alles außer Beeren pürieren.|Kleine Pfannkuchen in einer beschichteten Pfanne ausbacken.|Mit Beeren servieren."],
+["Hähnchen-Reis-Bowl","🍗",25,2,560,42,62,13,"mittag,abend,eiweiß,meal-prep","250|g|Hähnchenbrust;140|g|Basmatireis;1|Stück|Paprika;150|g|Brokkoli;100|g|Mais;2|EL|Sojasauce;1|EL|Olivenöl","Reis nach Packung kochen.|Hähnchen würfeln und in Öl anbraten, mit Sojasauce ablöschen.|Gemüse kurz mitbraten und alles in Schalen anrichten."],
+["Spaghetti Bolognese (leicht)","🍝",30,4,590,36,70,16,"mittag,abend,familie","400|g|Rinderhack;400|g|Vollkornspaghetti;800|g|Tomaten (Dose);1|Stück|Zwiebel;2|Stück|Karotten;2|Zehen|Knoblauch;40|g|Parmesan","Zwiebel, Knoblauch und Karotten fein würfeln und anbraten.|Hack zugeben und krümelig braten, Tomaten dazu, 20 Min. köcheln.|Spaghetti kochen und mit Soße und Parmesan servieren."],
+["Lachs mit Ofengemüse","🐟",35,2,520,34,32,27,"abend,eiweiß,omega-3","2|Stück|Lachsfilets;400|g|Süßkartoffel;1|Stück|Zucchini;1|Stück|Paprika;1|EL|Olivenöl;1|Stück|Zitrone","Ofen auf 200 °C vorheizen.|Gemüse würfeln, mit Öl und Gewürzen auf ein Blech geben, 15 Min. backen.|Lachs dazulegen und weitere 12–15 Min. garen. Mit Zitrone servieren."],
+["Linsen-Curry","🍛",30,4,430,20,58,11,"mittag,abend,vegan,familie,meal-prep","250|g|rote Linsen;400|ml|Kokosmilch (light);400|g|Tomaten (Dose);1|Stück|Zwiebel;2|Zehen|Knoblauch;2|EL|Currypulver;100|g|Spinat;200|g|Basmatireis","Zwiebel und Knoblauch anschwitzen, Curry kurz mitrösten.|Linsen, Tomaten, Kokosmilch und 300 ml Wasser zugeben, 15 Min. köcheln.|Spinat unterheben, mit Reis servieren."],
+["Chili sin Carne","🌶️",35,4,410,19,55,9,"mittag,abend,vegan,familie,meal-prep","400|g|Kidneybohnen;300|g|Mais;800|g|Tomaten (Dose);1|Stück|Paprika;1|Stück|Zwiebel;150|g|Quinoa;1|EL|Chilipulver","Zwiebel und Paprika anbraten, Gewürze dazu.|Tomaten, Bohnen, Mais und Quinoa mit 300 ml Wasser zugeben.|25 Min. köcheln, bis die Quinoa gar ist."],
+["Griechischer Salat mit Hähnchen","🥗",15,2,420,38,14,24,"mittag,abend,low-carb,schnell","250|g|Hähnchenbrust;1|Stück|Gurke;250|g|Tomaten;100|g|Feta;1|Stück|rote Zwiebel;50|g|Oliven;1|EL|Olivenöl","Hähnchen braten und in Streifen schneiden.|Gemüse würfeln, mit Feta und Oliven mischen.|Mit Öl, Salz, Pfeffer und Oregano anmachen."],
+["Gemüse-Omelett","🥚",12,1,340,24,8,23,"frühstück,abend,vegetarisch,low-carb,schnell","3|Stück|Eier;50|g|Champignons;50|g|Paprika;30|g|Gouda;30|g|Spinat","Gemüse klein schneiden und anbraten.|Verquirlte Eier darübergießen, Käse darüberstreuen.|Bei mittlerer Hitze stocken lassen und zusammenklappen."],
+["Thunfisch-Wrap","🌯",10,2,410,32,40,13,"mittag,schnell,eiweiß","2|Stück|Vollkorn-Wraps;1|Dose|Thunfisch (Wasser);100|g|Mais;60|g|Frischkäse;1|Stück|Tomate;50|g|Blattsalat","Wraps mit Frischkäse bestreichen.|Thunfisch, Mais, Tomate und Salat darauf verteilen.|Fest einrollen und halbieren."],
+["Ofen-Hähnchen mit Kartoffeln","🍗",45,4,520,40,48,17,"abend,familie,eiweiß","800|g|Hähnchenschenkel ohne Haut;800|g|Kartoffeln;2|Stück|Karotten;1|Stück|Zwiebel;2|EL|Olivenöl;1|TL|Paprikapulver","Ofen auf 200 °C vorheizen.|Kartoffeln und Gemüse vierteln, mit Öl und Gewürzen mischen.|Mit dem Hähnchen auf ein Blech geben und 40 Min. backen."],
+["Tofu-Gemüse-Pfanne","🥦",20,2,430,24,40,19,"mittag,abend,vegan,schnell","200|g|Tofu;150|g|Brokkoli;1|Stück|Paprika;100|g|Zuckerschoten;2|EL|Sojasauce;120|g|Reis;1|EL|Sesamöl","Reis kochen.|Tofu würfeln und knusprig braten.|Gemüse dazugeben, mit Sojasauce ablöschen und mit Reis servieren."],
+["Kartoffelsuppe","🥔",35,4,320,10,46,10,"mittag,abend,vegetarisch,familie","1000|g|Kartoffeln;2|Stück|Karotten;1|Stange|Lauch;1|l|Gemüsebrühe;100|ml|Sahne;1|Stück|Zwiebel","Gemüse schälen und würfeln, Zwiebel anschwitzen.|Mit Brühe aufgießen und 20 Min. köcheln.|Teilweise pürieren, Sahne unterrühren und abschmecken."],
+["Quinoa-Salat mit Feta","🥙",20,2,450,17,48,21,"mittag,vegetarisch,meal-prep","150|g|Quinoa;1|Stück|Gurke;200|g|Kirschtomaten;80|g|Feta;1|Bund|Petersilie;1|Stück|Zitrone;1|EL|Olivenöl","Quinoa kochen und abkühlen lassen.|Gemüse und Kräuter klein schneiden.|Alles mit Feta, Zitronensaft und Öl mischen."],
+["Putengeschnetzeltes mit Reis","🍲",25,3,520,42,58,12,"mittag,abend,eiweiß","450|g|Putenbrust;200|g|Champignons;1|Stück|Zwiebel;150|ml|Kochsahne 15 %;210|g|Reis;200|ml|Gemüsebrühe","Reis kochen.|Pute in Streifen anbraten, Zwiebel und Pilze zugeben.|Mit Brühe und Sahne ablöschen, 5 Min. köcheln, abschmecken."],
+["Shakshuka","🍅",25,2,380,22,26,20,"frühstück,abend,vegetarisch","4|Stück|Eier;400|g|Tomaten (Dose);1|Stück|Paprika;1|Stück|Zwiebel;50|g|Feta;2|Scheibe|Vollkornbrot","Zwiebel und Paprika anbraten, Tomaten und Gewürze dazu, 10 Min. köcheln.|Mulden formen, Eier hineinschlagen, zugedeckt stocken lassen.|Mit Feta bestreuen, mit Brot servieren."],
+["Burger-Bowl","🍔",20,2,560,40,30,31,"abend,low-carb","300|g|Rinderhack (mager);1|Stück|Romanasalat;200|g|Kirschtomaten;1|Stück|Gurke;40|g|Cheddar;2|Stück|Gewürzgurken;2|EL|Joghurt-Dressing","Hack würzen und krümelig braten.|Salat und Gemüse schneiden und in Schalen verteilen.|Hack, Käse und Gurken darauf, mit Dressing beträufeln."],
+["Couscous mit Kichererbsen","🫘",15,2,470,17,72,12,"mittag,vegan,schnell","150|g|Couscous;250|g|Kichererbsen;1|Stück|Paprika;1|Stück|Zucchini;1|Bund|Minze;1|Stück|Zitrone;1|EL|Olivenöl","Couscous mit kochendem Wasser übergießen und quellen lassen.|Gemüse und Kichererbsen anbraten.|Alles mischen, mit Zitrone und Minze abschmecken."],
+["Lasagne mit Gemüse","🧀",60,6,480,26,48,19,"abend,familie,vegetarisch","12|Stück|Lasagneplatten;2|Stück|Zucchini;1|Stück|Aubergine;800|g|Tomaten (Dose);500|g|Ricotta;125|g|Mozzarella;40|g|Parmesan","Gemüse würfeln und mit Tomaten 10 Min. köcheln.|Abwechselnd Platten, Soße und Ricotta schichten.|Mit Mozzarella und Parmesan bei 180 °C 35 Min. backen."],
+["Hüttenkäse-Snackteller","🧀",5,1,260,24,18,9,"snack,vegetarisch,eiweiß,schnell","200|g|Hüttenkäse;1|Stück|Paprika;0.5|Stück|Gurke;2|Stück|Reiswaffeln","Gemüse in Sticks schneiden.|Mit Hüttenkäse und Reiswaffeln anrichten."],
+["Apfel mit Erdnussbutter","🍎",2,1,230,6,28,11,"snack,vegan,schnell","1|Stück|Apfel;15|g|Erdnussbutter","Apfel in Spalten schneiden und mit Erdnussbutter dippen."],
+["Proteinshake mit Banane","🥤",3,1,310,30,38,5,"snack,frühstück,eiweiß,schnell","30|g|Proteinpulver;1|Stück|Banane;300|ml|Milch 1,5 %","Alles im Mixer kurz pürieren."]
+].map((r,i)=>({id:"lib"+i,lib:true,name:r[0],ic:r[1],min:r[2],servings:r[3],kcal:r[4],p:r[5],c:r[6],f:r[7],tags:r[8].split(","),
+  ingredients:r[9].split(";").map(x=>{const[q,u,n]=x.split("|");return{qty:parseFloat(q)||0,unit:u,name:n}}),steps:r[10].split("|")}));
+
+/* ===================== Essensplaner, Einkaufsliste & Rezepte ===================== */
+const P_KEY="nutrifit_planner";
+let P=null;
+function blankP(){return{v:1,recipes:{},plan:{},shop:{},dirty:{}}}
+function loadP(){
+  let a=null,b=null;
+  try{const t=localStorage.getItem(P_KEY);if(t)a=JSON.parse(t)}catch(e){}
+  try{if(window.AndroidBridge&&AndroidBridge.loadFile){const t=AndroidBridge.loadFile("planner.json");if(t)b=JSON.parse(t)}}catch(e){}
+  P=Object.assign(blankP(),(a&&b?((b.saved||0)>(a.saved||0)?b:a):(a||b))||{});
+  ["recipes","plan","shop","dirty"].forEach(k=>P[k]=P[k]||{});
+}
+function saveP(){
+  P.saved=Date.now(); const j=JSON.stringify(P);
+  try{localStorage.setItem(P_KEY,j)}catch(e){}
+  try{if(window.AndroidBridge&&AndroidBridge.saveFile)AndroidBridge.saveFile("planner.json",j)}catch(e){}
+}
+/* Jede Änderung bekommt einen Zeitstempel und wird zum Hochladen vorgemerkt */
+function touch(coll,id){const r=P[coll][id];if(!r)return;r.u=Date.now();r.by=syncName();P.dirty[coll+"/"+id]=1;saveP();if(typeof schedulePush==="function")schedulePush()}
+function liveRecs(coll){return Object.values(P[coll]).filter(r=>r&&!r.del)}
+const uid2=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function syncName(){try{return(SY&&SY.name)||""}catch(e){return""}}
+
+/* ---------- Rezepte ---------- */
+function myRecipes(){return liveRecs("recipes").sort((a,b)=>a.name.localeCompare(b.name,"de"))}
+function getRecipe(id){return(P.recipes[id]&&!P.recipes[id].del)?P.recipes[id]:RECIPE_LIB.find(r=>r.id===id)}
+function saveLibRecipe(r){const id="r"+uid2();P.recipes[id]=Object.assign(JSON.parse(JSON.stringify(r)),{id,lib:false,from:r.id});touch("recipes",id);return P.recipes[id]}
+function parseIng(line){
+  const m=line.trim().match(/^(\d+(?:[.,]\d+)?)?\s*(g|kg|ml|l|EL|TL|Stück|Stk\.?|Prise|Bund|Dose|Dosen|Zehen?|Scheiben?|Packung|Pck\.?|Becher|Glas|Stange)?\.?\s+(.+)$/i);
+  if(!m)return{qty:0,unit:"",name:line.trim()};
+  return{qty:m[1]?parseFloat(m[1].replace(",",".")):0,unit:m[2]||"",name:m[3].trim()};
+}
+const fmtQty=(q,u)=>q?`${String(Math.round(q*100)/100).replace(".",",")}${u?" "+u:""}`:(u||"");
+function recipeFit(r){const T=targets();const want=T.kcal*.33;return Math.abs(r.kcal-want)}
+const RTAGS=[["alle","Alle"],["schnell","⚡ Schnell"],["vegetarisch","🥕 Vegetarisch"],["vegan","🌱 Vegan"],["eiweiß","💪 Eiweiß"],["low-carb","🥩 Low-Carb"],["familie","👨‍👩‍👧 Familie"],["frühstück","🥐 Frühstück"],["snack","🍎 Snack"]];
+let recTag="alle",recQ="";
+
+/* ---------- Wochenplan ---------- */
+let planSeg="week",weekStart=mondayOf(today());
+function mondayOf(k){const d=new Date(k+"T12:00:00");const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return dkey(d)}
+function kw(k){const d=new Date(k+"T12:00:00");d.setDate(d.getDate()+3-(d.getDay()+6)%7);const w1=new Date(d.getFullYear(),0,4);return 1+Math.round(((d-w1)/864e5-3+(w1.getDay()+6)%7)/7)}
+function planDay(k){if(!P.plan[k]||P.plan[k].del)P.plan[k]={id:k,slots:{breakfast:[],lunch:[],dinner:[],snack:[]}};const d=P.plan[k];MEALS.forEach(m=>d.slots[m.k]=d.slots[m.k]||[]);return d}
+function peekPlan(k){const d=P.plan[k];return d&&!d.del?d:null}
+function entryFromRecipe(r,servings){return{e:uid2(),rid:r.id,name:r.name,ic:r.ic||"🍽️",servings:servings||r.servings||1,kcal:r.kcal||0,p:r.p||0,c:r.c||0,f:r.f||0}}
+function addToPlan(k,slot,entry){const d=planDay(k);d.slots[slot].push(entry);touch("plan",k)}
+
+function plannerHTML(){
+  const segs=`<div class="seg">${[["week","📅 Woche"],["shop","🛒 Einkauf"],["recipes","📖 Rezepte"]].map(([k,l])=>`<button data-pseg="${k}" class="${planSeg===k?"on":""}">${l}${k==="shop"?shopBadge():""}</button>`).join("")}</div>`;
+  return headerHTML(false)+`<h2 class="page">Planer ${syncBadgeHTML()}</h2>`+segs+({week:weekHTML,shop:shopHTML,recipes:recipesHTML})[planSeg]();
+}
+function shopBadge(){const n=liveRecs("shop").filter(i=>!i.done).length;return n?` <span class="pill">${n}</span>`:""}
+function weekHTML(){
+  const days=[...Array(7)].map((_,i)=>addDays(weekStart,i));
+  const fam=SY&&SY.family?`<div class="muted small" style="margin:-4px 2px 10px">👨‍👩‍👧 Geteilt mit ${esc(SY.family.name)}</div>`:"";
+  let out=`<div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="btn ghost" data-act="wprev" style="padding:8px 14px">‹</button><b>KW ${kw(weekStart)} · ${new Date(weekStart+"T12:00").toLocaleDateString("de-DE",{day:"numeric",month:"short"})} – ${new Date(days[6]+"T12:00").toLocaleDateString("de-DE",{day:"numeric",month:"short"})}</b><button class="btn ghost" data-act="wnext" style="padding:8px 14px">›</button></div>${fam}`;
+  days.forEach(k=>{
+    const d=peekPlan(k), all=d?MEALS.flatMap(m=>d.slots[m.k]||[]):[], kc=all.reduce((a,e)=>a+e.kcal,0);
+    const isT=k===today();
+    out+=`<div class="card" style="${isT?"border:2px solid var(--brand2)":""}"><h3>${isT?"Heute · ":""}${new Date(k+"T12:00").toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"numeric"})}<span class="muted small">${kc?"≈ "+r0(kc)+" kcal/Portion":""}</span></h3>
+    ${MEALS.map(m=>{const es=d?d.slots[m.k]:[];return`<div class="pslot"><span class="pl">${m.ic}</span><div class="pe">${es.map((e,i)=>`<button class="pchip ${e.eaten?"eaten":""}" data-pent="${k}|${m.k}|${i}">${e.ic||"🍽️"} ${esc(e.name)}${e.rid?` <small>×${e.servings}</small>`:""}${e.eaten?" ✓":""}</button>`).join("")}<button class="padd" data-padd="${k}|${m.k}" aria-label="${m.n} planen">＋</button></div></div>`}).join("")}</div>`;
+  });
+  out+=`<div class="grid2"><button class="btn sec" data-act="wfill">🎲 Woche füllen</button><button class="btn" data-act="wshop">🛒 Zutaten → Liste</button></div>
+  <div class="muted small" style="text-align:center;margin:8px 0 14px">„Woche füllen“ plant freie Mittag- und Abendessen mit passenden Rezepten.</div>`;
+  return out;
+}
+function weekIngredients(){
+  const map={};
+  [...Array(7)].map((_,i)=>addDays(weekStart,i)).forEach(k=>{const d=peekPlan(k);if(!d)return;
+    MEALS.forEach(m=>(d.slots[m.k]||[]).forEach(e=>{const r=e.rid&&getRecipe(e.rid);if(!r||!r.ingredients)return;const f=(e.servings||1)/(r.servings||1);
+      r.ingredients.forEach(g=>{const key=norm(g.name)+"|"+g.unit;map[key]=map[key]||{name:g.name,unit:g.unit,qty:0};map[key].qty+=(g.qty||0)*f})}))});
+  return Object.values(map);
+}
+function addIngredientsToShop(list){
+  let n=0;
+  list.forEach(g=>{
+    const ex=liveRecs("shop").find(i=>!i.done&&norm(i.name)===norm(g.name)&&(i.unit||"")===(g.unit||""));
+    if(ex){ex.qty=Math.round(((ex.qty||0)+(g.qty||0))*100)/100;touch("shop",ex.id)}
+    else{const id="s"+uid2();P.shop[id]={id,name:g.name,qty:Math.round((g.qty||0)*100)/100,unit:g.unit||"",cat:shopCat(g.name),done:false};touch("shop",id)}
+    n++;
+  });
+  return n;
+}
+function fillWeek(){
+  const pool=myRecipes().concat(RECIPE_LIB.filter(l=>!myRecipes().some(m=>m.from===l.id)));
+  const main=pool.filter(r=>!r.tags||r.tags.some(t=>t==="mittag"||t==="abend")||!r.lib);
+  let used=new Set(),n=0;
+  [...Array(7)].map((_,i)=>addDays(weekStart,i)).forEach(k=>["lunch","dinner"].forEach(sl=>{
+    const d=peekPlan(k); if(d&&d.slots[sl]&&d.slots[sl].length)return;
+    const cands=main.filter(r=>!used.has(r.id)); const r=(cands.length?cands:main)[Math.floor(Math.random()*(cands.length||main.length))];
+    if(!r)return; used.add(r.id); addToPlan(k,sl,entryFromRecipe(r,SY&&SY.family&&SY.family.members?Math.max(1,SY.family.members.length):1));n++;
+  }));
+  return n;
+}
+
+/* ---------- Einkaufsliste ---------- */
+const SHOP_CATS=[["🥬 Obst & Gemüse",/apfel|banane|beere|zitrone|orange|tomate|gurke|paprika|zwiebel|knoblauch|karotte|möhre|salat|spinat|brokkoli|zucchini|aubergine|kartoffel|süßkartoffel|pilz|champignon|lauch|kräuter|petersilie|minze|basilikum|avocado|kiwi|mango|traube|obst|gemüse|ingwer|kohl|mais(?!.*dose)|erbse|zuckerschote|rucola|birne/],
+ ["🥛 Milch, Käse & Eier",/milch|joghurt|skyr|quark|käse|feta|mozzarella|parmesan|ricotta|cheddar|gouda|sahne|butter|ei\b|eier|frischkäse|hüttenkäse|kefir/],
+ ["🥩 Fleisch & Fisch",/hähnchen|huhn|pute|rind|hack|schwein|lachs|thunfisch|fisch|garnele|wurst|schinken|speck|filet|steak/],
+ ["🍞 Brot & Backwaren",/brot|brötchen|toast|wrap|tortilla|baguette|croissant|knäcke|reiswaffel/],
+ ["🍝 Nudeln, Reis & Getreide",/nudel|spaghetti|pasta|lasagne|reis|quinoa|couscous|haferflocken|müsli|mehl|linsen|bulgur|cornflakes/],
+ ["🥫 Vorrat & Konserven",/dose|bohnen|kichererbsen|kokosmilch|brühe|passata|tomatenmark|sauce|soße|honig|marmelade|erdnussbutter|nüsse|mandel|walnuss|chia|backpulver|zucker|proteinpulver/],
+ ["🧂 Gewürze & Öle",/salz|pfeffer|öl|essig|curry|paprikapulver|chili|zimt|oregano|gewürz|senf|ketchup|mayo|sojasauce/],
+ ["❄️ Tiefkühl",/tk|tiefkühl|gefroren|eis\b/],
+ ["🥤 Getränke",/wasser|saft|cola|bier|wein|kaffee|tee|limo|sprudel/],
+ ["🍫 Snacks & Süßes",/schoko|chips|keks|gummi|riegel|kuchen|süß/],
+ ["🧴 Haushalt & Drogerie",/papier|spül|seife|shampoo|zahnpasta|müllbeutel|waschmittel|tücher|folie/]];
+function shopCat(name){const n=norm(name);const c=SHOP_CATS.find(([_,re])=>re.test(n));return c?c[0]:"🛍️ Sonstiges"}
+function shopHTML(){
+  const items=liveRecs("shop"); const open=items.filter(i=>!i.done), done=items.filter(i=>i.done);
+  const groups={};open.forEach(i=>{(groups[i.cat||shopCat(i.name)]=groups[i.cat||shopCat(i.name)]||[]).push(i)});
+  const order=SHOP_CATS.map(c=>c[0]).concat(["🛍️ Sonstiges"]);
+  const row=i=>`<div class="sitem ${i.done?"done":""}" data-stog="${i.id}"><span class="sbox">${i.done?"✓":""}</span><div class="n"><div>${esc(i.name)}</div>${i.qty||i.unit||(i.by&&i.by!==syncName())?`<small>${fmtQty(i.qty,i.unit)}${i.by&&i.by!==syncName()?` · ${esc(i.by)}`:""}</small>`:""}</div><button class="x" data-sdel="${i.id}" aria-label="Entfernen">×</button></div>`;
+  return`<form class="row" id="shopForm" style="margin-bottom:12px"><input class="inp" id="shopIn" placeholder="z. B. 2 l Milch, Bananen" autocomplete="off" enterkeyhint="done"><button class="btn" type="submit">＋</button></form>
+  ${open.length?order.filter(c=>groups[c]).map(c=>`<div class="card" style="padding:10px 14px"><div class="muted small" style="font-weight:700;margin:2px 0 4px">${c}</div>${groups[c].sort((a,b)=>a.name.localeCompare(b.name,"de")).map(row).join("")}</div>`).join("")
+    :`<div class="empty"><div style="font-size:40px">🛒</div>Die Einkaufsliste ist leer.<div class="small" style="margin-top:6px">Füge Artikel hinzu oder übernimm die Zutaten aus deinem Wochenplan.</div></div>`}
+  ${done.length?`<div class="card" style="padding:10px 14px"><div class="row" style="justify-content:space-between"><span class="muted small" style="font-weight:700">✓ Erledigt (${done.length})</span><button class="btn ghost" data-act="sclear" style="padding:6px 10px;font-size:12.5px">Entfernen</button></div>${done.map(row).join("")}</div>`:""}
+  <button class="btn sec block" data-act="wshop" style="margin-bottom:14px">📅 Zutaten aus dem Wochenplan übernehmen</button>`;
+}
+function bindShop(){
+  const f=$("#shopForm"); if(!f)return;
+  f.onsubmit=e=>{e.preventDefault();const v=$("#shopIn").value.trim();if(!v)return;
+    v.split(/,|;|\n/).map(s=>s.trim()).filter(Boolean).forEach(s=>{const g=parseIng(s);const id="s"+uid2();P.shop[id]={id,name:g.name,qty:g.qty,unit:g.unit,cat:shopCat(g.name),done:false};touch("shop",id)});
+    render();setTimeout(()=>{const i=$("#shopIn");if(i)i.focus()},50)};
+}
+
+/* ---------- Rezepte-Ansicht ---------- */
+function recipeCard(r){return`<button class="li rcard" data-rec="${r.id}"><span class="ric">${r.ic||"🍽️"}</span><div class="n"><b>${esc(r.name)}</b><small>${r.min?r.min+" Min. · ":""}${r0(r.kcal)} kcal · ${r0(r.p)} g Eiweiß${r.servings?" · "+r.servings+" Port.":""}</small></div><span class="plus">›</span></button>`}
+function recipesHTML(){
+  const q=norm(recQ), match=r=>(!q||norm(r.name).includes(q)||(r.ingredients||[]).some(g=>norm(g.name).includes(q)))&&(recTag==="alle"||(r.tags||[]).includes(recTag));
+  const mine=myRecipes().filter(match);
+  const sugg=RECIPE_LIB.filter(l=>!myRecipes().some(m=>m.from===l.id)).filter(match).sort((a,b)=>recipeFit(a)-recipeFit(b));
+  return`<input class="inp" id="recQ" placeholder="Rezept oder Zutat suchen" value="${esc(recQ)}" autocomplete="off">
+  <div class="chips">${RTAGS.map(([k,l])=>`<button class="chip ${recTag===k?"on":""}" data-rtag="${k}">${l}</button>`).join("")}</div>
+  <div class="grid2" style="margin-bottom:12px"><button class="btn" data-act="rnew">＋ Eigenes Rezept</button><button class="btn sec" data-act="rai">✨ KI-Vorschläge</button></div>
+  <div class="muted small" style="font-weight:700;margin:4px 2px 8px">${SY&&SY.family?"Rezepte der Familie":"Meine Rezepte"} (${mine.length})</div>
+  <div class="list">${mine.map(recipeCard).join("")||`<div class="muted small" style="margin:0 2px 10px">Noch keine – speichere Vorschläge mit ⭐ oder lege eigene an.</div>`}</div>
+  <div class="muted small" style="font-weight:700;margin:14px 2px 8px">💡 Vorschläge für dich</div>
+  <div class="list">${sugg.map(recipeCard).join("")||`<div class="muted small">Keine passenden Vorschläge.</div>`}</div>`;
+}
+function openRecipe(id,servOverride){
+  const r=getRecipe(id); if(!r)return;
+  let sv=servOverride||r.servings||1;
+  const draw=()=>{const f=sv/(r.servings||1);
+    return`<div class="row" style="gap:12px;margin-bottom:10px"><span style="font-size:44px">${r.ic||"🍽️"}</span><div><div class="muted small">${r.min?"⏱️ "+r.min+" Min. · ":""}${(r.tags||[]).filter(t=>!["mittag","abend"].includes(t)).slice(0,3).join(" · ")}</div>${r.lib?`<div class="muted small">Vorschlag aus NutriFit</div>`:r.by?`<div class="muted small">von ${esc(r.by)}</div>`:""}</div></div>
+    <div class="card" style="margin:0 0 12px"><div class="stat"><div><b>${r0(r.kcal)}</b><span>kcal/Portion</span></div><div><b>${r0(r.p)} g</b><span>Eiweiß</span></div><div><b>${r0(r.c)} / ${r0(r.f)} g</b><span>KH / Fett</span></div></div></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:6px"><b>Zutaten</b><span class="row"><button class="btn ghost" id="svM" style="padding:4px 12px">−</button><b id="svV" style="min-width:86px;text-align:center">${sv} Portion${sv>1?"en":""}</b><button class="btn ghost" id="svP" style="padding:4px 12px">+</button></span></div>
+    <div class="card" style="margin:0 0 12px;padding:8px 14px">${(r.ingredients||[]).map(g=>`<div class="kv"><span>${esc(g.name)}</span><span class="muted">${fmtQty((g.qty||0)*f,g.unit)}</span></div>`).join("")||`<div class="muted small">Keine Zutaten hinterlegt.</div>`}</div>
+    ${(r.steps||[]).length?`<b>Zubereitung</b><ol style="padding-left:20px;line-height:1.55;font-size:14px">${r.steps.map(s=>`<li style="margin-bottom:6px">${esc(s)}</li>`).join("")}</ol>`:""}
+    <div class="grid2"><button class="btn" id="rPlan">📅 Einplanen</button><button class="btn sec" id="rEat">✓ Gegessen</button></div>
+    <div class="grid2" style="margin-top:8px"><button class="btn sec" id="rShop">🛒 Zutaten</button>${r.lib?`<button class="btn sec" id="rSave">⭐ Speichern</button>`:`<button class="btn sec" id="rEdit">✏️ Bearbeiten</button>`}</div>
+    ${r.lib?"":`<button class="btn ghost block" id="rDel" style="margin-top:8px;color:var(--danger)">Rezept löschen</button>`}`};
+  const bind=()=>{
+    $("#svM").onclick=()=>{if(sv>1){sv--;$("#recBody").innerHTML=draw();bind()}};
+    $("#svP").onclick=()=>{sv++;$("#recBody").innerHTML=draw();bind()};
+    $("#rPlan").onclick=()=>openPlanPicker(r,sv);
+    $("#rEat").onclick=()=>{const h=new Date().getHours();const slot=h<11?"breakfast":h<15?"lunch":h<17?"snack":"dinner";logEaten({name:r.name,kcal:r.kcal,p:r.p,c:r.c,f:r.f},today(),slot,1);closeSheet();render()};
+    $("#rShop").onclick=()=>{const f=sv/(r.servings||1);const n=addIngredientsToShop((r.ingredients||[]).map(g=>({name:g.name,unit:g.unit,qty:(g.qty||0)*f})));closeSheet();render();toast(`${n} Zutaten auf der Einkaufsliste`)};
+    const sv2=$("#rSave");if(sv2)sv2.onclick=()=>{const m=saveLibRecipe(r);closeSheet();render();toast(`⭐ ${m.name} gespeichert`)};
+    const ed=$("#rEdit");if(ed)ed.onclick=()=>openRecipeEdit(r.id);
+    const dl=$("#rDel");if(dl)dl.onclick=()=>{if(dl.dataset.sure!=="1"){dl.dataset.sure="1";dl.textContent="Wirklich löschen?";return}P.recipes[r.id].del=true;touch("recipes",r.id);closeSheet();render();toast("Rezept gelöscht")};
+  };
+  openSheet(esc(r.name),`<div id="recBody">${draw()}</div>`,bind);
+}
+function logEaten(n,k,slot,portions){
+  day(k).meals[slot].push({name:n.name+(portions!==1?` (${portions} Port.)`:""),grams:0,unit:portions+" Portion"+(portions>1?"en":""),kcal:n.kcal*portions,p:n.p*portions,c:n.c*portions,f:n.f*portions,cat:"Rezept"});
+  save(); toast(`✓ ${n.name} bei „${MEALS.find(m=>m.k===slot).n}“ eingetragen`);
+}
+function openPlanPicker(r,servings){
+  const days=[...Array(14)].map((_,i)=>addDays(today(),i));
+  let selD=today(),selS=["lunch","dinner"].includes(r.tags&&r.tags[0])?r.tags[0]:(r.tags||[]).includes("frühstück")?"breakfast":(r.tags||[]).includes("snack")?"snack":"dinner";
+  const draw=()=>`<div class="muted small" style="margin-bottom:6px">Tag</div><div class="chips">${days.map(k=>`<button class="chip ${k===selD?"on":""}" data-pd="${k}">${niceDate(k)}</button>`).join("")}</div>
+    <div class="muted small" style="margin:8px 0 6px">Mahlzeit</div><div class="chips">${MEALS.map(m=>`<button class="chip ${m.k===selS?"on":""}" data-ps="${m.k}">${m.ic} ${m.n}</button>`).join("")}</div>
+    <button class="btn block" id="ppGo" style="margin-top:10px">${esc(r.name)} einplanen (${servings} Port.)</button>`;
+  openSheet("Einplanen",`<div id="ppB">${draw()}</div>`,()=>{
+    const B=$("#ppB");
+    B.onclick=e=>{const d=e.target.closest("[data-pd]"),s=e.target.closest("[data-ps]");
+      if(d){selD=d.dataset.pd;B.innerHTML=draw()}else if(s){selS=s.dataset.ps;B.innerHTML=draw()}
+      else if(e.target.id==="ppGo"){const rr=r.lib?(myRecipes().find(m=>m.from===r.id)||r):r;addToPlan(selD,selS,entryFromRecipe(rr,servings));closeSheet();weekStart=mondayOf(selD);tab="plan";planSeg="week";render();toast(`📅 Für ${niceDate(selD)} eingeplant`)}};
+  });
+}
+function openSlotAdd(k,slot){
+  const m=MEALS.find(x=>x.k===slot);
+  const list=myRecipes().concat(RECIPE_LIB.filter(l=>!myRecipes().some(x=>x.from===l.id)));
+  const draw=q=>{q=norm(q||"");return list.filter(r=>!q||norm(r.name).includes(q)).sort((a,b)=>{const pa=(a.tags||[]).includes(slot==="breakfast"?"frühstück":slot==="snack"?"snack":"abend")?0:1,pb=(b.tags||[]).includes(slot==="breakfast"?"frühstück":slot==="snack"?"snack":"abend")?0:1;return pa-pb||(a.lib?1:0)-(b.lib?1:0)}).slice(0,40).map(recipeCard).join("")};
+  openSheet(`${m.ic} ${m.n} · ${niceDate(k)}`,`<input class="inp" id="saQ" placeholder="Rezept suchen" autocomplete="off">
+    <form class="row" id="saFree" style="margin:8px 0 12px"><input class="inp" id="saT" placeholder="Oder frei eintragen, z. B. Pizza essen"><button class="btn" type="submit">＋</button></form>
+    <div class="list" id="saL">${draw("")}</div>`,()=>{
+    $("#saQ").oninput=e=>{$("#saL").innerHTML=draw(e.target.value)};
+    $("#saFree").onsubmit=e=>{e.preventDefault();const t=$("#saT").value.trim();if(!t)return;addToPlan(k,slot,{e:uid2(),name:t,ic:"🍽️",servings:1,kcal:0,p:0,c:0,f:0});closeSheet();render()};
+    $("#saL").onclick=e=>{const b=e.target.closest("[data-rec]");if(!b)return;let r=getRecipe(b.dataset.rec);if(r.lib)r=saveLibRecipe(r);addToPlan(k,slot,entryFromRecipe(r));closeSheet();render();toast(`${r.name} eingeplant`)};
+  });
+}
+function openEntry(k,slot,i){
+  const d=peekPlan(k);if(!d)return;const e=d.slots[slot][i];if(!e)return;const r=e.rid&&getRecipe(e.rid);
+  openSheet(`${e.ic||"🍽️"} ${esc(e.name)}`,`<div class="muted small" style="margin-bottom:10px">${niceDate(k)} · ${MEALS.find(m=>m.k===slot).n}${e.kcal?` · ${r0(e.kcal)} kcal/Portion`:""}${e.by?` · geplant von ${esc(e.by)}`:""}</div>
+    ${r?`<div class="row" style="justify-content:space-between;margin-bottom:10px"><span>Portionen kochen</span><span class="row"><button class="btn ghost" id="eM" style="padding:4px 12px">−</button><b id="eV" style="min-width:30px;text-align:center">${e.servings}</b><button class="btn ghost" id="eP" style="padding:4px 12px">+</button></span></div>`:""}
+    <button class="btn block" id="eEat">${e.eaten?"Nochmal eintragen":"✓ 1 Portion als gegessen eintragen"}</button>
+    <div class="grid2" style="margin-top:8px">${r?`<button class="btn sec" id="eRec">📖 Rezept</button>`:`<span></span>`}<button class="btn ghost" id="eDel" style="color:var(--danger)">Entfernen</button></div>`,()=>{
+    const upd=()=>{d.slots[slot][i]=e;touch("plan",k);const v=$("#eV");if(v)v.textContent=e.servings};
+    if(r){$("#eM").onclick=()=>{if(e.servings>1){e.servings--;upd()}};$("#eP").onclick=()=>{e.servings++;upd()};$("#eRec").onclick=()=>openRecipe(e.rid,e.servings)}
+    $("#eEat").onclick=()=>{logEaten({name:e.name,kcal:e.kcal,p:e.p,c:e.c,f:e.f},k,slot,1);e.eaten=true;upd();closeSheet();render()};
+    $("#eDel").onclick=()=>{d.slots[slot].splice(i,1);touch("plan",k);closeSheet();render()};
+  });
+}
+function openRecipeEdit(id){
+  const r=id?getRecipe(id):{name:"",ic:"🍽️",min:20,servings:2,kcal:0,p:0,c:0,f:0,ingredients:[],steps:[],tags:[]};
+  const ics=["🍽️","🥗","🍝","🍛","🍲","🥘","🍗","🐟","🥩","🥚","🥣","🥞","🌯","🍕","🍔","🥙","🍜","🍰","🥤","🍎"];
+  openSheet(id?"Rezept bearbeiten":"Neues Rezept",`<label class="field"><span>Name</span><input class="inp" id="reN" value="${esc(r.name)}" placeholder="z. B. Omas Gemüsesuppe"></label>
+    <div class="chips" id="reI">${ics.map(x=>`<button class="chip ${x===r.ic?"on":""}" data-ic="${x}" style="font-size:18px;padding:4px 8px">${x}</button>`).join("")}</div>
+    <div class="grid2"><label class="field"><span>Portionen</span><input class="inp" id="reS" type="number" inputmode="numeric" value="${r.servings}"></label><label class="field"><span>Zeit (Min.)</span><input class="inp" id="reM" type="number" inputmode="numeric" value="${r.min||""}"></label></div>
+    <label class="field"><span>Zutaten – eine pro Zeile, z. B. „200 g Nudeln“</span><textarea class="inp" id="reG" rows="6">${esc((r.ingredients||[]).map(g=>(g.qty?String(g.qty).replace(".",",")+" ":"")+(g.unit?g.unit+" ":"")+g.name).join("\n"))}</textarea></label>
+    <label class="field"><span>Zubereitung – ein Schritt pro Zeile</span><textarea class="inp" id="reSt" rows="5">${esc((r.steps||[]).join("\n"))}</textarea></label>
+    <div class="muted small" style="margin-bottom:6px">Nährwerte pro Portion</div>
+    <div class="grid4"><input class="inp" id="reK" type="number" inputmode="decimal" placeholder="kcal" value="${r.kcal||""}"><input class="inp" id="reP" type="number" inputmode="decimal" placeholder="Eiweiß" value="${r.p||""}"><input class="inp" id="reC" type="number" inputmode="decimal" placeholder="KH" value="${r.c||""}"><input class="inp" id="reF" type="number" inputmode="decimal" placeholder="Fett" value="${r.f||""}"></div>
+    ${gem().key?`<button class="btn sec block" id="reAI" style="margin-top:8px">✨ Nährwerte per KI berechnen</button>`:""}
+    <label class="field" style="margin-top:12px"><span>Stichworte (optional, mit Komma)</span><input class="inp" id="reT" value="${esc((r.tags||[]).join(", "))}" placeholder="schnell, vegetarisch, familie"></label>
+    <button class="btn block" id="reGo">Speichern</button>`,()=>{
+    let ic=r.ic||"🍽️";
+    $("#reI").onclick=e=>{const b=e.target.closest("[data-ic]");if(!b)return;ic=b.dataset.ic;document.querySelectorAll("#reI .chip").forEach(c=>c.classList.toggle("on",c===b))};
+    const num=s=>parseFloat(String($(s).value).replace(",","."))||0;
+    const ai=$("#reAI"); if(ai)ai.onclick=async()=>{ai.disabled=true;ai.textContent="Berechne …";
+      try{const o=await gemGenerate([{text:`Berechne die Nährwerte PRO PORTION für dieses Rezept (${num("#reS")||1} Portionen). Zutaten:\n${$("#reG").value}\nAntworte NUR mit JSON: {"kcal":Zahl,"protein":Zahl,"carbs":Zahl,"fat":Zahl}`}]);
+        $("#reK").value=r0(o.kcal);$("#reP").value=r0(o.protein);$("#reC").value=r0(o.carbs);$("#reF").value=r0(o.fat);toast("Nährwerte berechnet")}
+      catch(e){toast(e.message==="offline"?"Keine Verbindung":e.message)} ai.disabled=false;ai.textContent="✨ Nährwerte per KI berechnen"};
+    $("#reGo").onclick=()=>{
+      const name=$("#reN").value.trim(); if(!name){toast("Bitte einen Namen eingeben");return}
+      const rid=id&&!getRecipe(id).lib?id:"r"+uid2();
+      P.recipes[rid]=Object.assign(P.recipes[rid]||{},{id:rid,name:name.slice(0,80),ic,servings:Math.max(1,num("#reS")||1),min:num("#reM")||0,kcal:num("#reK"),p:num("#reP"),c:num("#reC"),f:num("#reF"),
+        ingredients:$("#reG").value.split("\n").map(s=>s.trim()).filter(Boolean).map(parseIng),steps:$("#reSt").value.split("\n").map(s=>s.trim()).filter(Boolean),
+        tags:$("#reT").value.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean),lib:false,del:false});
+      touch("recipes",rid); closeSheet(); tab="plan"; planSeg="recipes"; render(); toast("Rezept gespeichert");
+    };
+  });
+}
+function openAIRecipes(){
+  if(!gem().key){openGemSetup();return}
+  const T=targets();
+  openSheet("✨ KI-Rezeptvorschläge",`<label class="field"><span>Worauf hast du Lust? Was ist noch da? (optional)</span><textarea class="inp" id="aiW" rows="3" placeholder="z. B. schnell, vegetarisch, mit Brokkoli und Reis, kinderfreundlich"></textarea></label>
+    <button class="btn block" id="aiGo">3 Rezepte vorschlagen</button><div id="aiR" style="margin-top:12px"></div>`,()=>{
+    $("#aiGo").onclick=async()=>{
+      const box=$("#aiR"); box.innerHTML=`<div class="empty"><span class="spin"></span><div style="margin-top:8px">Gemini denkt nach …</div></div>`;
+      const fam=SY&&SY.family?` Es wird für eine Familie mit ${SY.family.members.length} Personen gekocht.`:"";
+      try{
+        const o=await gemGenerate([{text:`Du bist ein Koch und Ernährungscoach. Schlage 3 abwechslungsreiche, alltagstaugliche Rezepte auf Deutsch vor. Tagesziel des Nutzers: ${T.kcal} kcal, ${T.p} g Eiweiß, Ziel: ${({lose:"abnehmen",lose_slow:"sanft abnehmen",keep:"Gewicht halten",gain:"Muskelaufbau"})[S.profile.goal]}.${fam} Wünsche: ${$("#aiW").value.trim().slice(0,300)||"keine"}.
+Antworte NUR mit JSON: {"recipes":[{"name":"…","emoji":"ein Emoji","minutes":Zahl,"servings":Zahl,"kcal":Zahl,"protein":Zahl,"carbs":Zahl,"fat":Zahl,"tags":["…"],"ingredients":[{"qty":Zahl,"unit":"g|ml|Stück|EL|TL|…","name":"…"}],"steps":["…"]}]}
+Nährwerte gelten PRO PORTION. Zutatenmengen für alle Portionen zusammen.`}]);
+        const rs=(o.recipes||[]).slice(0,5).map(x=>({id:"ai"+uid2(),lib:true,ai:true,name:String(x.name||"Rezept").slice(0,80),ic:x.emoji||"🍽️",min:+x.minutes||0,servings:+x.servings||2,kcal:+x.kcal||0,p:+x.protein||0,c:+x.carbs||0,f:+x.fat||0,tags:(x.tags||[]).map(t=>String(t).toLowerCase()),
+          ingredients:(x.ingredients||[]).map(g=>({qty:+g.qty||0,unit:String(g.unit||""),name:String(g.name||"")})),steps:(x.steps||[]).map(String)}));
+        aiTemp=rs;
+        box.innerHTML=rs.length?rs.map(r=>`<div class="card" style="margin-bottom:8px"><div class="row"><span style="font-size:30px">${r.ic}</span><div style="flex:1"><b>${esc(r.name)}</b><div class="muted small">${r.min} Min. · ${r0(r.kcal)} kcal · ${r0(r.p)} g Eiweiß</div></div></div>
+          <div class="muted small" style="margin:6px 0 8px">${esc(r.ingredients.map(g=>g.name).slice(0,7).join(", "))}</div><div class="grid2"><button class="btn sec" data-aiv="${r.id}">Ansehen</button><button class="btn" data-ais="${r.id}">⭐ Speichern</button></div></div>`).join(""):`<div class="note">Keine Vorschläge erhalten – bitte nochmal versuchen.</div>`;
+        box.onclick=e=>{const v=e.target.closest("[data-aiv]"),s=e.target.closest("[data-ais]");
+          const r=aiTemp.find(x=>x.id===(v||s||{}).dataset?.[v?"aiv":"ais"]);if(!r)return;
+          if(s){const m=saveLibRecipe(r);s.disabled=true;s.textContent="✓ Gespeichert";toast(`⭐ ${m.name} gespeichert`)}
+          else openAITemp(r)};
+      }catch(e){box.innerHTML=`<div class="note">${esc(e.message==="offline"?"Keine Verbindung zu Gemini.":e.message)}</div>`}
+    };
+  });
+}
+let aiTemp=[];
+function openAITemp(r){RECIPE_LIB_TMP=r;openRecipe(r.id)}
+let RECIPE_LIB_TMP=null;
+const _getRecipe=getRecipe;
+getRecipe=function(id){return _getRecipe(id)||(RECIPE_LIB_TMP&&RECIPE_LIB_TMP.id===id?RECIPE_LIB_TMP:null)};
+
+function bindPlanner(){
+  bindShop();
+  const q=$("#recQ"); if(q){q.oninput=()=>{recQ=q.value;const pos=q.selectionStart;render();const n=$("#recQ");if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}}
+}
+function plannerClick(b){
+  if(b.dataset.pseg){planSeg=b.dataset.pseg;render();return true}
+  if(b.dataset.act==="wprev"){weekStart=addDays(weekStart,-7);render();return true}
+  if(b.dataset.act==="wnext"){weekStart=addDays(weekStart,7);render();return true}
+  if(b.dataset.act==="wfill"){const n=fillWeek();render();toast(n?`🎲 ${n} Mahlzeiten eingeplant`:"Mittag und Abend sind schon verplant");return true}
+  if(b.dataset.act==="wshop"){const list=weekIngredients();if(!list.length){toast("Keine Rezepte mit Zutaten in dieser Woche");return true}const n=addIngredientsToShop(list);planSeg="shop";render();toast(`🛒 ${n} Zutaten übernommen`);return true}
+  if(b.dataset.act==="sclear"){liveRecs("shop").filter(i=>i.done).forEach(i=>{i.del=true;touch("shop",i.id)});render();return true}
+  if(b.dataset.act==="rnew"){openRecipeEdit(null);return true}
+  if(b.dataset.act==="rai"){openAIRecipes();return true}
+  if(b.dataset.padd){const[k,s]=b.dataset.padd.split("|");openSlotAdd(k,s);return true}
+  if(b.dataset.pent){const[k,s,i]=b.dataset.pent.split("|");openEntry(k,s,+i);return true}
+  if(b.dataset.rtag){recTag=b.dataset.rtag;render();return true}
+  if(b.dataset.rec){openRecipe(b.dataset.rec);return true}
+  if(b.dataset.sdel){const it=P.shop[b.dataset.sdel];if(it){it.del=true;touch("shop",it.id);render()}return true}
+  return false;
+}
+function plannerDivClick(e){
+  const s=e.target.closest("[data-stog]"); if(s&&!e.target.closest("[data-sdel]")){const it=P.shop[s.dataset.stog];if(it){it.done=!it.done;touch("shop",it.id);render()}return true}
+  return false;
+}
+
+/* ===================== Konto, Familie & Firebase-Synchronisierung ===================== */
+/* Auth über die Firebase-REST-API, Daten in Firestore (REST). Lokal bleibt alles nutzbar – die Cloud spiegelt nur. */
+const FIREBASE_DEFAULT=null; // {apiKey:"…",projectId:"…"} – wird beim Bauen eingetragen, sobald das Projekt steht
+let SY=null;
+function loadSY(){
+  let a=null;try{const t=(window.AndroidBridge&&AndroidBridge.loadFile&&AndroidBridge.loadFile("cloud.json"))||localStorage.getItem("nutrifit_cloud");if(t)a=JSON.parse(t)}catch(e){}
+  SY=Object.assign({cfg:FIREBASE_DEFAULT,auth:null,name:"",family:null,meta:{hash:{},u:{},pp:{},pd:0},status:"",last:0,err:""},a||{});
+  if(!SY.cfg&&FIREBASE_DEFAULT)SY.cfg=FIREBASE_DEFAULT;
+  SY.meta=Object.assign({hash:{},u:{},pp:{},pd:0},SY.meta||{});
+}
+function saveSY(){const j=JSON.stringify(SY);try{localStorage.setItem("nutrifit_cloud",j)}catch(e){}try{if(window.AndroidBridge&&AndroidBridge.saveFile)AndroidBridge.saveFile("cloud.json",j)}catch(e){}}
+const loggedIn=()=>!!(SY&&SY.cfg&&SY.auth&&SY.auth.refresh);
+
+/* ---------- Firestore-Werte umwandeln ---------- */
+function toV(v){
+  if(v===null||v===undefined)return{nullValue:null};
+  if(typeof v==="boolean")return{booleanValue:v};
+  if(typeof v==="number")return Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};
+  if(typeof v==="string")return{stringValue:v};
+  if(Array.isArray(v))return{arrayValue:{values:v.map(toV)}};
+  const f={};Object.keys(v).forEach(k=>f[k]=toV(v[k]));return{mapValue:{fields:f}};
+}
+function fromV(v){
+  if(!v)return null;
+  if("stringValue" in v)return v.stringValue; if("integerValue" in v)return parseInt(v.integerValue,10);
+  if("doubleValue" in v)return v.doubleValue; if("booleanValue" in v)return v.booleanValue; if("nullValue" in v)return null;
+  if("timestampValue" in v)return v.timestampValue;
+  if("arrayValue" in v)return(v.arrayValue.values||[]).map(fromV);
+  if("mapValue" in v){const o={},f=v.mapValue.fields||{};Object.keys(f).forEach(k=>o[k]=fromV(f[k]));return o}
+  return null;
+}
+const fieldsOf=o=>{const f={};Object.keys(o).forEach(k=>f[k]=toV(o[k]));return f};
+const docObj=d=>{const o={};Object.keys(d.fields||{}).forEach(k=>o[k]=fromV(d.fields[k]));return o};
+
+/* ---------- Anmeldung (Firebase Auth REST) ---------- */
+function authMsg(m){
+  const t={EMAIL_EXISTS:"Diese E-Mail ist schon registriert – melde dich an.",EMAIL_NOT_FOUND:"Kein Konto mit dieser E-Mail.",INVALID_PASSWORD:"Falsches Passwort.",INVALID_LOGIN_CREDENTIALS:"E-Mail oder Passwort falsch.",
+    INVALID_EMAIL:"Ungültige E-Mail-Adresse.",USER_DISABLED:"Dieses Konto ist gesperrt.",TOO_MANY_ATTEMPTS_TRY_LATER:"Zu viele Versuche – bitte später erneut.",OPERATION_NOT_ALLOWED:"E-Mail-Anmeldung ist im Firebase-Projekt nicht aktiviert.",
+    CONFIGURATION_NOT_FOUND:"Firebase-Authentifizierung ist im Projekt noch nicht eingerichtet.","API key not valid. Please pass a valid API key.":"Der Firebase-Schlüssel ist ungültig."};
+  const key=String(m||"").split(" : ")[0].trim();
+  if(/^WEAK_PASSWORD/.test(key))return"Passwort zu schwach – mindestens 6 Zeichen.";
+  return t[key]||t[m]||("Fehler: "+m);
+}
+async function authCall(path,body){
+  const r=await httpReq("POST",`https://identitytoolkit.googleapis.com/v1/accounts:${path}?key=${encodeURIComponent(SY.cfg.apiKey)}`,{"Content-Type":"application/json"},JSON.stringify(body));
+  let j={};try{j=JSON.parse(r.body)}catch(e){}
+  if(r.status!==200)throw new Error(authMsg(j.error&&j.error.message||("HTTP "+r.status)));
+  return j;
+}
+function setAuth(j,email){SY.auth={uid:j.localId||j.user_id,email:email||j.email||(SY.auth&&SY.auth.email),refresh:j.refreshToken||j.refresh_token,id:j.idToken||j.id_token,exp:Date.now()+((+j.expiresIn||+j.expires_in||3600)-120)*1000};saveSY()}
+async function idToken(){
+  if(!loggedIn())throw new Error("nicht angemeldet");
+  if(SY.auth.id&&SY.auth.exp>Date.now())return SY.auth.id;
+  const r=await httpReq("POST",`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(SY.cfg.apiKey)}`,{"Content-Type":"application/x-www-form-urlencoded"},"grant_type=refresh_token&refresh_token="+encodeURIComponent(SY.auth.refresh));
+  let j={};try{j=JSON.parse(r.body)}catch(e){}
+  if(r.status!==200){const m=j.error&&j.error.message||"";if(/TOKEN_EXPIRED|USER_NOT_FOUND|INVALID_REFRESH_TOKEN|USER_DISABLED/.test(m)){SY.auth=null;saveSY();throw new Error("Bitte melde dich erneut an.")}throw new Error("offline")}
+  setAuth(j); return SY.auth.id;
+}
+async function signUp(name,email,pw){
+  const j=await authCall("signUp",{email,password:pw,returnSecureToken:true});
+  setAuth(j,email); SY.name=name||email.split("@")[0]; SY.meta={hash:{},u:{},pp:{},pd:0,fresh:true}; saveSY();
+  try{await authCall("update",{idToken:j.idToken,displayName:SY.name,returnSecureToken:false})}catch(e){}
+  await fsPatch(`users/${SY.auth.uid}`,{name:SY.name,email,fid:""});
+  markAllDirty(); await syncNow(true);
+}
+async function signIn(email,pw){
+  const j=await authCall("signInWithPassword",{email,password:pw,returnSecureToken:true});
+  setAuth(j,email); SY.name=j.displayName||email.split("@")[0]; SY.meta={hash:{},u:{},pp:{},pd:0,fresh:true}; saveSY();
+  try{const u=await fsGet(`users/${SY.auth.uid}`);if(u){if(u.name)SY.name=u.name;if(u.fid)await loadFamily(u.fid)}}catch(e){}
+  markAllDirty(); await syncNow(true);
+}
+function signOut(){SY.auth=null;SY.family=null;SY.meta={hash:{},u:{},pp:{},pd:0};SY.status="";saveSY();render();toast("Abgemeldet – deine Daten bleiben auf dem Gerät")}
+
+/* ---------- Firestore REST ---------- */
+const fsBase=()=>`https://firestore.googleapis.com/v1/projects/${SY.cfg.projectId}/databases/(default)/documents`;
+const fsName=p=>`projects/${SY.cfg.projectId}/databases/(default)/documents/${p}`;
+async function fsReq(method,url,body){
+  const tok=await idToken();
+  const r=await httpReq(method,url,{"Content-Type":"application/json","Authorization":"Bearer "+tok},body?JSON.stringify(body):null);
+  if(r.status===401){SY.auth.id="";SY.auth.exp=0}
+  return r;
+}
+function fsErr(r){let m="";try{m=JSON.parse(r.body).error.message}catch(e){}
+  if(r.status===403)return"Keine Berechtigung"+(m?" ("+m+")":"")+". Sind die Sicherheitsregeln eingetragen?";
+  if(r.status===404&&/database/i.test(m))return"Firestore-Datenbank fehlt im Firebase-Projekt.";
+  return"Firestore-Fehler "+r.status+(m?": "+m:"")}
+async function fsGet(path){const r=await fsReq("GET",`${fsBase()}/${path}`);if(r.status===404)return null;if(r.status!==200)throw new Error(fsErr(r));return docObj(JSON.parse(r.body))}
+async function fsPatch(path,obj){const r=await fsReq("PATCH",`${fsBase()}/${path}?${Object.keys(obj).map(k=>"updateMask.fieldPaths="+encodeURIComponent(k)).join("&")}`,{fields:fieldsOf(obj)});if(r.status!==200)throw new Error(fsErr(r))}
+async function fsCommit(writes){if(!writes.length)return;for(let i=0;i<writes.length;i+=400){const r=await fsReq("POST",`${fsBase()}:commit`,{writes:writes.slice(i,i+400)});if(r.status!==200)throw new Error(fsErr(r))}}
+async function fsChanged(parent,coll,since){
+  const r=await fsReq("POST",`${fsBase()}${parent?"/"+parent:""}:runQuery`,{structuredQuery:{from:[{collectionId:coll}],where:{fieldFilter:{field:{fieldPath:"u"},op:"GREATER_THAN",value:{integerValue:String(Math.max(0,since))}}}}});
+  if(r.status!==200)throw new Error(fsErr(r));
+  return(JSON.parse(r.body)||[]).filter(x=>x.document).map(x=>({id:x.document.name.split("/").pop(),...docObj(x.document)}));
+}
+const recWrite=(path,d,u)=>({update:{name:fsName(path),fields:fieldsOf({d,u,by:SY.name||""})}});
+
+/* ---------- Was wird synchronisiert? ---------- */
+function hashStr(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)+"."+s.length}
+function personalChunks(){
+  const core=Object.assign({},S); delete core.days; delete core.lastUpdCheck; delete core.skipVersion;
+  core.gemini=Object.assign({},S.gemini||{}); delete core.gemini.key; // API-Schlüssel bleibt auf dem Gerät
+  const out={core:JSON.stringify(core),fit:JSON.stringify(F)};
+  const months={};Object.keys(S.days||{}).forEach(k=>{const m="m-"+k.slice(0,7);(months[m]=months[m]||{})[k]=S.days[k]});
+  Object.keys(months).forEach(m=>out[m]=JSON.stringify(months[m]));
+  return out;
+}
+function applyChunk(name,json){
+  const v=JSON.parse(json);
+  if(name==="core"){const keep={days:S.days,gemini:S.gemini,lastUpdCheck:S.lastUpdCheck,skipVersion:S.skipVersion};S=Object.assign(blank(),v);S.days=keep.days||{};S.gemini=Object.assign({},v.gemini||{},{key:keep.gemini&&keep.gemini.key||""});S.lastUpdCheck=keep.lastUpdCheck;S.skipVersion=keep.skipVersion}
+  else if(name==="fit"){F=v;load2();fitSave(true)}
+  else if(name.startsWith("m-")){const mon=name.slice(2);Object.keys(S.days).filter(k=>k.startsWith(mon)).forEach(k=>delete S.days[k]);Object.assign(S.days,v)}
+}
+const plannerBase=()=>SY.family?`families/${SY.family.id}`:`users/${SY.auth.uid}`;
+function markAllDirty(){["recipes","plan","shop"].forEach(c=>Object.keys(P[c]).forEach(id=>{P[c][id].u=P[c][id].u||Date.now();P.dirty[c+"/"+id]=1}));saveP();SY.meta.pp={};saveSY()}
+
+/* ---------- Synchronisieren ---------- */
+let syncing=false,pushTimer=null,pollTimer=null,syncAgain=false;
+function schedulePush(){if(!loggedIn())return;clearTimeout(pushTimer);pushTimer=setTimeout(()=>syncNow(),1500)}
+function syncSoon(){schedulePush()}
+async function syncNow(manual){
+  if(!loggedIn())return;
+  if(syncing){syncAgain=true;return}
+  syncing=true; SY.status="sync"; updSyncBadge();
+  let changed=false;
+  try{
+    // 1) Familie aktuell halten
+    if(SY.family){try{await loadFamily(SY.family.id)}catch(e){if(/Berechtigung/.test(e.message)){SY.family=null;markAllDirty();toast("Du bist nicht mehr in der Familie")}else throw e}}
+    const uid=SY.auth.uid, fresh=!!SY.meta.fresh;
+    // 2) Persönliche Daten: erst holen (bei neuer Anmeldung gewinnt die Cloud), dann eigene Änderungen hochladen
+    const rem=await fsChanged(`users/${uid}`,"data",fresh?0:(SY.meta.pd||0)-120000);
+    rem.sort((a,b)=>a.u-b.u).forEach(d=>{
+      if(!d.d||d.u<=(SY.meta.u[d.id]||0))return;
+      const localJ=personalChunks()[d.id], dirty=localJ!==undefined&&hashStr(localJ)!==SY.meta.hash[d.id];
+      if(dirty&&!fresh&&(SY.meta.u[d.id]||0)>0)return; // lokale Änderung gewinnt, wird gleich hochgeladen
+      applyChunk(d.id,d.d); SY.meta.hash[d.id]=hashStr(d.d); SY.meta.u[d.id]=d.u; SY.meta.pd=Math.max(SY.meta.pd||0,d.u); changed=true;
+    });
+    if(changed){syncNow.applying=true;save();syncNow.applying=false}
+    // Nach dem Übernehmen Hashes neu berechnen (Formatierung kann abweichen)
+    const ch=personalChunks(), writes=[], now=Date.now();
+    Object.keys(ch).forEach(n=>{const h=hashStr(ch[n]);if(h!==SY.meta.hash[n]){writes.push(recWrite(`users/${uid}/data/${n}`,ch[n],now));SY.meta.hash[n]=h;SY.meta.u[n]=now}});
+    await fsCommit(writes); SY.meta.fresh=false;
+    // 3) Planer (Familie oder persönlich): Änderungen hochladen …
+    const base=plannerBase(), pw=[];
+    Object.keys(P.dirty).forEach(key=>{const[c,id]=key.split("/");const rec=P[c]&&P[c][id];if(rec)pw.push(recWrite(`${base}/${c}/${id}`,JSON.stringify(rec),rec.u||now))});
+    const sent=Object.keys(P.dirty); await fsCommit(pw); sent.forEach(k=>delete P.dirty[k]);
+    // … und Änderungen der anderen holen
+    for(const c of ["recipes","plan","shop"]){
+      const docs=await fsChanged(base,c,(SY.meta.pp[c]||0)-120000);
+      docs.forEach(d=>{let rec;try{rec=JSON.parse(d.d)}catch(e){return}
+        const loc=P[c][d.id]; if(!loc||(rec.u||0)>(loc.u||0)){if(!(P.dirty[c+"/"+d.id]&&loc&&(loc.u||0)>=(rec.u||0))){P[c][d.id]=rec;changed=true}}
+        SY.meta.pp[c]=Math.max(SY.meta.pp[c]||0,d.u||0)});
+    }
+    // alte Löschmarken aufräumen
+    ["recipes","plan","shop"].forEach(c=>Object.keys(P[c]).forEach(id=>{const r=P[c][id];if(r&&r.del&&(r.u||0)<Date.now()-30*864e5&&!P.dirty[c+"/"+id])delete P[c][id]}));
+    saveP(); SY.status="ok"; SY.last=Date.now(); SY.err="";
+    if(manual===true)toast("☁️ Synchronisiert");
+  }catch(e){
+    SY.status=e.message==="offline"||e.message==="timeout"?"offline":"error"; SY.err=e.message;
+    if(manual===true)toast(SY.status==="offline"?"Keine Verbindung – wird später synchronisiert":e.message);
+  }finally{
+    syncing=false; saveSY(); updSyncBadge();
+    if(changed&&canRerender()){const fid=document.activeElement&&document.activeElement.id;render();if(fid){const el=document.getElementById(fid);if(el)el.focus()}}
+    if(syncAgain){syncAgain=false;setTimeout(()=>syncNow(),300)}
+  }
+}
+function canRerender(){const a=document.activeElement;return!$("#scrim").classList.contains("open")&&!(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.value)&&["today","plan","stats","profile","fast"].includes(tab)}
+function startPolling(){clearInterval(pollTimer);pollTimer=setInterval(()=>{if(!document.hidden&&loggedIn())syncNow()},25000)}
+function syncBadgeHTML(){if(!loggedIn())return"";const ic={sync:"🔄",ok:"☁️",offline:"📴",error:"⚠️"}[SY.status]||"☁️";return`<span id="syncBadge" class="syncb" data-act="syncnow" title="Synchronisieren">${ic}</span>`}
+function updSyncBadge(){const b=$("#syncBadge");if(b)b.textContent={sync:"🔄",ok:"☁️",offline:"📴",error:"⚠️"}[SY.status]||"☁️"}
+
+/* ---------- Familie ---------- */
+const CODE_CH="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newCode=()=>[...Array(6)].map(()=>CODE_CH[Math.floor(Math.random()*CODE_CH.length)]).join("");
+async function loadFamily(fid){const f=await fsGet(`families/${fid}`);if(!f)throw new Error("Familie nicht gefunden");SY.family={id:fid,...f};saveSY();return SY.family}
+async function createFamily(name){
+  const uid=SY.auth.uid, fid="f"+uid2()+uid.slice(0,4), code=newCode();
+  await fsCommit([{update:{name:fsName(`families/${fid}`),fields:fieldsOf({name,owner:uid,members:[uid],memberInfo:{[uid]:{name:SY.name,email:SY.auth.email}},invite:code,createdAt:Date.now()})},currentDocument:{exists:false}}]);
+  await fsCommit([{update:{name:fsName(`invites/${code}`),fields:fieldsOf({fid,by:uid,at:Date.now()})}}]);
+  await fsPatch(`users/${uid}`,{fid}); await loadFamily(fid); markAllDirty(); await syncNow();
+}
+async function joinFamily(code){
+  code=code.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const inv=await fsGet(`invites/${code}`); if(!inv||!inv.fid)throw new Error("Code ungültig.");
+  const uid=SY.auth.uid;
+  await fsCommit([{update:{name:fsName(`families/${inv.fid}`),fields:fieldsOf({joinCode:code,memberInfo:{[uid]:{name:SY.name,email:SY.auth.email}}})},
+    updateMask:{fieldPaths:["joinCode","memberInfo.`"+uid+"`"]},updateTransforms:[{fieldPath:"members",appendMissingElements:{values:[{stringValue:uid}]}}],currentDocument:{exists:true}}]);
+  await fsPatch(`users/${uid}`,{fid:inv.fid}); await loadFamily(inv.fid); markAllDirty(); await syncNow();
+}
+async function leaveFamily(){
+  const f=SY.family,uid=SY.auth.uid; if(!f)return;
+  if((f.members||[]).length<=1&&f.owner===uid){await fsCommit([{delete:fsName(`families/${f.id}`)}].concat(f.invite?[{delete:fsName(`invites/${f.invite}`)}]:[]))}
+  else await fsCommit([{update:{name:fsName(`families/${f.id}`),fields:{}},updateMask:{fieldPaths:["memberInfo.`"+uid+"`"]},updateTransforms:[{fieldPath:"members",removeAllFromArray:{values:[{stringValue:uid}]}}]}]);
+  await fsPatch(`users/${uid}`,{fid:""}); SY.family=null; saveSY(); markAllDirty(); await syncNow();
+}
+const joinKey=()=>"NF1."+btoa(JSON.stringify({p:SY.cfg.projectId,k:SY.cfg.apiKey,c:SY.family&&SY.family.invite||""})).replace(/=+$/,"");
+function parseJoinKey(t){const m=String(t).match(/NF1\.([A-Za-z0-9+/_-]+)/);if(!m)return null;try{const o=JSON.parse(atob(m[1].replace(/-/g,"+").replace(/_/g,"/")));return o&&o.p&&o.k?o:null}catch(e){return null}}
+function parseFirebaseConfig(t){
+  const k=(String(t).match(/apiKey["']?\s*[:=]\s*["']([^"']+)/)||[])[1], p=(String(t).match(/projectId["']?\s*[:=]\s*["']([^"']+)/)||[])[1];
+  if(k&&p)return{apiKey:k,projectId:p}; const jk=parseJoinKey(t); return jk?{apiKey:jk.k,projectId:jk.p,code:jk.c}:null;
+}
+
+/* ---------- Oberfläche ---------- */
+function cloudCardHTML(){
+  if(!SY.cfg)return`<div class="card"><h3>☁️ Konto & Familie</h3><div class="muted small" style="line-height:1.5;margin-bottom:10px">Melde dich an, um deine Daten auf allen Geräten zu haben und Essensplan, Einkaufsliste und Rezepte mit deiner Familie zu teilen.</div><button class="btn block" data-act="cloudsetup">Einrichten</button></div>`;
+  if(!loggedIn())return`<div class="card"><h3>☁️ Konto & Familie</h3><div class="muted small" style="margin-bottom:10px">Melde dich mit deiner E-Mail an, um zu synchronisieren und eine Familie zu gründen.</div><div class="grid2"><button class="btn" data-act="login">Anmelden</button><button class="btn sec" data-act="register">Registrieren</button></div></div>`;
+  const f=SY.family, st={sync:"Synchronisiere …",ok:"Synchronisiert",offline:"Offline – wartet auf Verbindung",error:"Fehler: "+(SY.err||"")}[SY.status]||"Bereit";
+  return`<div class="card"><h3>☁️ Konto <span class="muted small">${SY.last?"zuletzt "+hm(SY.last):""}</span></h3>
+    <div class="kv"><span>Angemeldet als</span><b style="max-width:62%;overflow:hidden;text-overflow:ellipsis">${esc(SY.name)}<div class="muted small" style="font-weight:400">${esc(SY.auth.email)}</div></b></div>
+    <div class="kv"><span>Status</span><span class="${SY.status==="error"?"":"muted"}" style="${SY.status==="error"?"color:var(--danger)":""};max-width:62%;text-align:right">${esc(st)}</span></div>
+    <div class="grid2" style="margin-top:8px"><button class="btn sec" data-act="syncnow">Jetzt synchronisieren</button><button class="btn ghost" data-act="logout">Abmelden</button></div></div>
+  <div class="card"><h3>👨‍👩‍👧 Familie</h3>${f?`<div class="kv"><span>Name</span><b>${esc(f.name)}</b></div>
+      <div class="muted small" style="margin:8px 0 4px">Mitglieder</div>${(f.members||[]).map(id=>{const m=(f.memberInfo||{})[id]||{};return`<div class="item"><span style="font-size:20px">${id===f.owner?"👑":"🙂"}</span><div class="n"><div>${esc(m.name||"Mitglied")}${id===SY.auth.uid?" (du)":""}</div><small>${esc(m.email||"")}</small></div></div>`}).join("")}
+      <div class="card" style="margin:10px 0;background:var(--brandSoft);box-shadow:none;text-align:center"><div class="muted small">Einladungscode</div><div style="font-size:30px;font-weight:800;letter-spacing:4px;color:var(--brand)">${esc(f.invite||"–")}</div></div>
+      <button class="btn block" data-act="famshare">Einladung teilen</button>
+      <div class="muted small" style="margin:8px 0">Geteilt werden Essensplan, Einkaufsliste und Rezepte. Tagebuch, Training, Fasten und Gewohnheiten bleiben privat.</div>
+      <button class="btn ghost block" data-act="famleave" style="color:var(--danger)">Familie verlassen</button>`
+    :`<div class="muted small" style="line-height:1.5;margin-bottom:10px">Gründe eine Familie oder tritt einer bei, um Essensplan, Einkaufsliste und Rezepte gemeinsam zu nutzen.</div><div class="grid2"><button class="btn" data-act="famnew">Familie gründen</button><button class="btn sec" data-act="famjoin">Beitreten</button></div>`}</div>`;
+}
+function openCloudSetup(after){
+  openSheet("Firebase verbinden",`<div class="muted small" style="line-height:1.5;margin-bottom:10px">Füge die <b>Firebase-Konfiguration</b> deines Projekts ein (Projekteinstellungen → Allgemein → Deine Apps → <i>firebaseConfig</i>) – oder einen <b>Einladungsschlüssel</b> (NF1.…), den dir jemand aus deiner Familie geschickt hat.</div>
+    <textarea class="inp" id="cfT" rows="6" placeholder='const firebaseConfig = { apiKey: "…", projectId: "…", … }'></textarea>
+    <button class="btn block" id="cfGo" style="margin-top:10px">Übernehmen</button>`,()=>{
+    $("#cfGo").onclick=()=>{const c=parseFirebaseConfig($("#cfT").value);if(!c){toast("apiKey und projectId nicht gefunden");return}
+      SY.cfg={apiKey:c.apiKey,projectId:c.projectId};if(c.code)SY.pendingCode=c.code;saveSY();closeSheet();render();toast("✓ Firebase verbunden");(after||openLogin)(false)};
+  });
+}
+function openLogin(register){
+  if(!SY.cfg){openCloudSetup(()=>openLogin(register));return}
+  openSheet(register?"Konto erstellen":"Anmelden",`${register?`<label class="field"><span>Dein Name (sehen Familienmitglieder)</span><input class="inp" id="lgN" autocomplete="name" placeholder="z. B. Alex"></label>`:""}
+    <label class="field"><span>E-Mail</span><input class="inp" id="lgE" type="email" autocomplete="email" autocapitalize="off" inputmode="email"></label>
+    <label class="field"><span>Passwort${register?" (mind. 6 Zeichen)":""}</span><input class="inp" id="lgP" type="password" autocomplete="${register?"new-password":"current-password"}"></label>
+    <div id="lgErr"></div><button class="btn block" id="lgGo">${register?"Registrieren":"Anmelden"}</button>
+    <div class="grid2" style="margin-top:8px"><button class="btn ghost" id="lgSw">${register?"Ich habe ein Konto":"Neues Konto"}</button>${register?"<span></span>":`<button class="btn ghost" id="lgFg">Passwort vergessen</button>`}</div>
+    ${!loggedIn()&&!register?`<div class="muted small" style="margin-top:10px;line-height:1.45">Deine Ernährungs-, Trainings- und Gewohnheitsdaten werden nach der Anmeldung mit deinem Konto abgeglichen.</div>`:""}`,()=>{
+    const err=t=>{$("#lgErr").innerHTML=`<div class="note" style="color:var(--danger);background:rgba(212,60,60,.08);margin-bottom:10px">${esc(t)}</div>`};
+    $("#lgSw").onclick=()=>openLogin(!register);
+    const fg=$("#lgFg"); if(fg)fg.onclick=async()=>{const e=$("#lgE").value.trim();if(!e){err("Gib zuerst deine E-Mail ein.");return}
+      try{await authCall("sendOobCode",{requestType:"PASSWORD_RESET",email:e});$("#lgErr").innerHTML=`<div class="note" style="margin-bottom:10px">📧 Link zum Zurücksetzen wurde an ${esc(e)} geschickt.</div>`}catch(x){err(x.message==="offline"?"Keine Verbindung.":x.message)}};
+    $("#lgGo").onclick=async()=>{
+      const e=$("#lgE").value.trim(),p=$("#lgP").value,n=register?$("#lgN").value.trim():"";
+      if(!/^\S+@\S+\.\S+$/.test(e)){err("Bitte eine gültige E-Mail eingeben.");return}if(p.length<6){err("Das Passwort braucht mindestens 6 Zeichen.");return}
+      const b=$("#lgGo");b.disabled=true;b.innerHTML=`<span class="spin" style="width:18px;height:18px;border-width:2px"></span>`;
+      try{if(register)await signUp(n,e,p);else await signIn(e,p);
+        closeSheet(); startPolling(); render(); toast(register?`Willkommen, ${SY.name}! ☁️`:`Angemeldet als ${SY.name} ☁️`);
+        if(SY.pendingCode&&!SY.family){const c=SY.pendingCode;SY.pendingCode="";saveSY();try{await joinFamily(c);render();toast(`👨‍👩‍👧 Familie „${SY.family.name}“ beigetreten`)}catch(x){toast(x.message)}}
+      }catch(x){b.disabled=false;b.textContent=register?"Registrieren":"Anmelden";err(x.message==="offline"||x.message==="timeout"?"Keine Internetverbindung.":x.message)}
+    };
+  });
+}
+function openFamNew(){
+  openSheet("Familie gründen",`<label class="field"><span>Name der Familie</span><input class="inp" id="fnN" placeholder="z. B. Familie Müller"></label><button class="btn block" id="fnGo">Gründen</button>
+    <div class="muted small" style="margin-top:10px">Deine bisherigen Rezepte, dein Essensplan und deine Einkaufsliste werden in die Familie übernommen.</div>`,()=>{
+    $("#fnGo").onclick=async()=>{const n=$("#fnN").value.trim();if(!n){toast("Bitte einen Namen eingeben");return}const b=$("#fnGo");b.disabled=true;b.textContent="Erstelle …";
+      try{await createFamily(n.slice(0,40));closeSheet();render();toast(`👨‍👩‍👧 Familie „${n}“ gegründet`);openFamShare()}catch(e){b.disabled=false;b.textContent="Gründen";toast(e.message==="offline"?"Keine Verbindung":e.message)}};
+  });
+}
+function openFamJoin(){
+  openSheet("Familie beitreten",`<label class="field"><span>Einladungscode (6 Zeichen) oder Einladungsschlüssel</span><input class="inp" id="fjC" autocapitalize="characters" autocomplete="off" placeholder="z. B. K7P2QX" style="font-size:20px;letter-spacing:3px;text-align:center"></label>
+    <button class="btn block" id="fjGo">Beitreten</button><div class="muted small" style="margin-top:10px">Deine Rezepte, dein Plan und deine Einkaufsliste werden mit der Familie zusammengeführt.</div>`,()=>{
+    $("#fjGo").onclick=async()=>{let c=$("#fjC").value.trim();const jk=parseJoinKey(c);if(jk)c=jk.c;if(c.replace(/[^A-Za-z0-9]/g,"").length<6){toast("Bitte den Code eingeben");return}
+      const b=$("#fjGo");b.disabled=true;b.textContent="Trete bei …";
+      try{await joinFamily(c);closeSheet();tab="plan";render();toast(`👨‍👩‍👧 Willkommen in „${SY.family.name}“`)}catch(e){b.disabled=false;b.textContent="Beitreten";toast(e.message==="offline"?"Keine Verbindung":e.message)}};
+  });
+}
+function openFamShare(){
+  const f=SY.family;if(!f)return;
+  const txt=`Komm in unsere NutriFit-Familie „${f.name}“! 🥑\n\n1. NutriFit installieren: https://github.com/TotesTierux/nutrifit/raw/main/apk/NutriFit.apk\n2. In der App: ⚙️ → Konto → Registrieren\n3. Familie → Beitreten → Code: ${f.invite}\n\nFalls die App nach einer Einrichtung fragt, diesen Schlüssel einfügen:\n${joinKey()}`;
+  openSheet("Einladung teilen",`<div class="card" style="text-align:center;background:var(--brandSoft);box-shadow:none"><div class="muted small">Code</div><div style="font-size:34px;font-weight:800;letter-spacing:5px;color:var(--brand)">${esc(f.invite)}</div></div>
+    <textarea class="inp" rows="7" readonly id="fsT">${esc(txt)}</textarea>
+    <div class="grid2" style="margin-top:10px"><button class="btn sec" id="fsC">Kopieren</button>${NATIVE?`<button class="btn" id="fsS">Teilen …</button>`:"<span></span>"}</div>`,()=>{
+    $("#fsC").onclick=async()=>{if(NATIVE){NATIVE.copy(txt);toast("Kopiert ✓");return}try{await navigator.clipboard.writeText(txt);toast("Kopiert ✓")}catch(e){$("#fsT").select()}};
+    const s=$("#fsS");if(s)s.onclick=()=>NATIVE.share("NutriFit-Einladung",txt);
+  });
+}
+function cloudClick(b){
+  const a=b.dataset.act;
+  if(a==="cloudsetup"){openCloudSetup();return true}
+  if(a==="login"){openLogin(false);return true}
+  if(a==="register"){openLogin(true);return true}
+  if(a==="logout"){signOut();return true}
+  if(a==="syncnow"){syncNow(true).then(()=>{if(tab==="profile")render()});return true}
+  if(a==="famnew"){openFamNew();return true}
+  if(a==="famjoin"){openFamJoin();return true}
+  if(a==="famshare"){openFamShare();return true}
+  if(a==="famleave"){if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="Wirklich verlassen?";return true}leaveFamily().then(()=>{render();toast("Familie verlassen")}).catch(e=>toast(e.message));return true}
+  return false;
 }
 
 /* ===================== Gewohnheiten (z. B. Vapen) ===================== */
@@ -1446,6 +2078,7 @@ function fitSave(now){
     try{ localStorage.setItem(KEY,j);}catch(e){}
     try{ if(window.AndroidBridge&&AndroidBridge.saveFile) AndroidBridge.saveFile('fitlog.json',j);}catch(e){} };
   if(now) f(); else saveT=setTimeout(f,300);
+  if(typeof schedulePush==="function"&&!syncNow.applying)schedulePush();
 }
 const getEx=id=>F.exercises.find(e=>e.id===id)||{id,name:'(gelöscht)',type:'reps'};
 const getW=id=>F.workouts.find(w=>w.id===id);
@@ -1994,11 +2627,12 @@ function confetti(){
 
 
 /* ===================== Start ===================== */
-fitLoad();
+fitLoad();loadP();loadSY();
+if(loggedIn()){startPolling();setTimeout(()=>syncNow(),1500)}
 if(S.profile&&["#fast","#today","#train"].includes(location.hash)){tab=location.hash.slice(1);if(tab==="train"&&F.active)ui.view="session"}
 render();
 syncNotifs();
-document.addEventListener("visibilitychange",()=>{if(document.hidden){stopScan();fitSave(true)}else{syncNotifs();applyHabitStops();if(["today","stats","fast"].includes(tab))render()}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){stopScan();fitSave(true)}else{syncNotifs();applyHabitStops();if(loggedIn())syncNow();if(["today","stats","fast"].includes(tab))render()}});
 applyHabitStops();syncHabitNotifs();pushQuick();
 if(S.profile&&Date.now()-(S.lastUpdCheck||0)>6*36e5)setTimeout(()=>checkUpdate(false),4000);
 </script>
