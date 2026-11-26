@@ -12,7 +12,9 @@ Android-App für **Ernährung, Training, Intervallfasten und Gewohnheiten** – 
 - **Automatische Updates** aus diesem Repository
 
 ## Installation
-Neueste APK herunterladen: [NutriFit.apk](https://github.com/TotesTierux/nutrifit/raw/main/apk/NutriFit.apk) – öffnen und installieren. Spätere Updates meldet die App selbst.
+**iPhone:** [totestierux.github.io/nutrifit](https://totestierux.github.io/nutrifit/) in Safari öffnen → Teilen → „Zum Home-Bildschirm“.
+
+**Android:** Neueste APK herunterladen: [NutriFit.apk](https://github.com/TotesTierux/nutrifit/raw/main/apk/NutriFit.apk) – öffnen und installieren. Spätere Updates meldet die App selbst.
 
 ## Ziffernblätter (Xiaomi Watch S5)
 Die Bilder in [`watchfaces/`](watchfaces) aufs Handy laden und in **Mi Fitness → Gerät → Zifferblätter → Foto-Zifferblatt** als Hintergrund wählen.
