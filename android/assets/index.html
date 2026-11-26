@@ -564,7 +564,7 @@ function profileHTML(){
     <div class="muted small" style="margin-bottom:10px">Ernährung, Training und Fasten liegen nur lokal auf diesem Gerät. Sichere sie ab und zu per Backup – z. B. als Nachricht an dich selbst. Hier kannst du auch ein Backup aus der alten FitLog- oder NutriScan-App einfügen.</div>
     <div class="grid2"><button class="btn sec" data-act="export">Backup teilen</button><button class="btn sec" data-act="import">Backup einfügen</button></div>
     <button class="btn ghost block" style="margin-top:10px;color:var(--danger)" data-act="reset">Alle Daten löschen</button></div>
-  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.4 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
+  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.5 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
 }
 function profileForm(p){
   p=p||{sex:"f",age:30,height:170,weight:70,target:65,activity:1.375,goal:"lose"};
@@ -1263,7 +1263,7 @@ function pushQuick(){
   }catch(e){}
 }
 const UPDATE_URL="https://raw.githubusercontent.com/TotesTierux/nutrifit/main/update.json";
-const APP_VERSION="2.4";
+const APP_VERSION="2.5";
 function appCode(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 let updInfo=null;
 async function checkUpdate(manual){
@@ -1627,7 +1627,7 @@ function plannerDivClick(e){
 
 /* ===================== Konto, Familie & Firebase-Synchronisierung ===================== */
 /* Auth über die Firebase-REST-API, Daten in Firestore (REST). Lokal bleibt alles nutzbar – die Cloud spiegelt nur. */
-const FIREBASE_DEFAULT=null; // {apiKey:"…",projectId:"…"} – wird beim Bauen eingetragen, sobald das Projekt steht
+const FIREBASE_DEFAULT={apiKey:"AIzaSyC0YGnEU3m7yHwpr9R-hiaR1in6t4qvkwQ",projectId:"nutrifit-33d04"};
 let SY=null;
 function loadSY(){
   let a=null;try{const t=(window.AndroidBridge&&AndroidBridge.loadFile&&AndroidBridge.loadFile("cloud.json"))||localStorage.getItem("nutrifit_cloud");if(t)a=JSON.parse(t)}catch(e){}
@@ -1891,7 +1891,7 @@ function openFamJoin(){
 }
 function openFamShare(){
   const f=SY.family;if(!f)return;
-  const txt=`Komm in unsere NutriFit-Familie „${f.name}“! 🥑\n\n1. NutriFit installieren: https://github.com/TotesTierux/nutrifit/raw/main/apk/NutriFit.apk\n2. In der App: ⚙️ → Konto → Registrieren\n3. Familie → Beitreten → Code: ${f.invite}\n\nFalls die App nach einer Einrichtung fragt, diesen Schlüssel einfügen:\n${joinKey()}`;
+  const txt=`Komm in unsere NutriFit-Familie „${f.name}“! 🥑\n\n1. NutriFit installieren: https://github.com/TotesTierux/nutrifit/raw/main/apk/NutriFit.apk\n2. In der App: ⚙️ → Konto → Registrieren\n3. Familie → Beitreten → Code: ${f.invite}`;
   openSheet("Einladung teilen",`<div class="card" style="text-align:center;background:var(--brandSoft);box-shadow:none"><div class="muted small">Code</div><div style="font-size:34px;font-weight:800;letter-spacing:5px;color:var(--brand)">${esc(f.invite)}</div></div>
     <textarea class="inp" rows="7" readonly id="fsT">${esc(txt)}</textarea>
     <div class="grid2" style="margin-top:10px"><button class="btn sec" id="fsC">Kopieren</button>${NATIVE?`<button class="btn" id="fsS">Teilen …</button>`:"<span></span>"}</div>`,()=>{

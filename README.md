@@ -23,4 +23,4 @@ Die Bilder in [`watchfaces/`](watchfaces) aufs Handy laden und in **Mi Fitness �
 3. `update.json` anpassen – die App findet das Update automatisch
 
 ## Firebase (Sync & Familie)
-Eigenes Firebase-Projekt: Authentication → E-Mail/Passwort aktivieren, Firestore-Datenbank anlegen und die Regeln aus [`firebase/firestore.rules`](firebase/firestore.rules) eintragen. Die `firebaseConfig` einmalig in der App unter ⚙️ → Konto → Einrichten einfügen.
+Eigenes Firebase-Projekt: Authentication → E-Mail/Passwort aktivieren, Firestore-Datenbank anlegen und die Regeln aus [`firebase/firestore.rules`](firebase/firestore.rules) eintragen. Die Konfiguration ist in der App fest eingetragen (Projekt `nutrifit-33d04`).
