@@ -564,7 +564,7 @@ function profileHTML(){
     <div class="muted small" style="margin-bottom:10px">Ernährung, Training und Fasten liegen nur lokal auf diesem Gerät. Sichere sie ab und zu per Backup – z. B. als Nachricht an dich selbst. Hier kannst du auch ein Backup aus der alten FitLog- oder NutriScan-App einfügen.</div>
     <div class="grid2"><button class="btn sec" data-act="export">Backup teilen</button><button class="btn sec" data-act="import">Backup einfügen</button></div>
     <button class="btn ghost block" style="margin-top:10px;color:var(--danger)" data-act="reset">Alle Daten löschen</button></div>
-  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.5 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
+  <div class="muted small" style="text-align:center;padding:8px 0 4px">NutriFit 2.6 · Produktdaten: Open Food Facts (ODbL). Nährwerte sind Richtwerte und ersetzen keine Ernährungsberatung.</div>`;
 }
 function profileForm(p){
   p=p||{sex:"f",age:30,height:170,weight:70,target:65,activity:1.375,goal:"lose"};
@@ -1263,7 +1263,7 @@ function pushQuick(){
   }catch(e){}
 }
 const UPDATE_URL="https://raw.githubusercontent.com/TotesTierux/nutrifit/main/update.json";
-const APP_VERSION="2.5";
+const APP_VERSION="2.6";
 function appCode(){try{return NATIVE&&NATIVE.appVersion?NATIVE.appVersion():0}catch(e){return 0}}
 let updInfo=null;
 async function checkUpdate(manual){
@@ -1712,7 +1712,8 @@ function fsErr(r){let m="";try{m=JSON.parse(r.body).error.message}catch(e){}
   if(r.status===404&&/database/i.test(m))return"Firestore-Datenbank fehlt im Firebase-Projekt.";
   return"Firestore-Fehler "+r.status+(m?": "+m:"")}
 async function fsGet(path){const r=await fsReq("GET",`${fsBase()}/${path}`);if(r.status===404)return null;if(r.status!==200)throw new Error(fsErr(r));return docObj(JSON.parse(r.body))}
-async function fsPatch(path,obj){const r=await fsReq("PATCH",`${fsBase()}/${path}?${Object.keys(obj).map(k=>"updateMask.fieldPaths="+encodeURIComponent(k)).join("&")}`,{fields:fieldsOf(obj)});if(r.status!==200)throw new Error(fsErr(r))}
+// Android kann kein HTTP-PATCH → Teil-Update über :commit (POST)
+async function fsPatch(path,obj){await fsCommit([{update:{name:fsName(path),fields:fieldsOf(obj)},updateMask:{fieldPaths:Object.keys(obj)}}])}
 async function fsCommit(writes){if(!writes.length)return;for(let i=0;i<writes.length;i+=400){const r=await fsReq("POST",`${fsBase()}:commit`,{writes:writes.slice(i,i+400)});if(r.status!==200)throw new Error(fsErr(r))}}
 async function fsChanged(parent,coll,since){
   const r=await fsReq("POST",`${fsBase()}${parent?"/"+parent:""}:runQuery`,{structuredQuery:{from:[{collectionId:coll}],where:{fieldFilter:{field:{fieldPath:"u"},op:"GREATER_THAN",value:{integerValue:String(Math.max(0,since))}}}}});
@@ -1753,6 +1754,7 @@ async function syncNow(manual){
     // 1) Familie aktuell halten
     if(SY.family){try{await loadFamily(SY.family.id)}catch(e){if(/Berechtigung/.test(e.message)){SY.family=null;markAllDirty();toast("Du bist nicht mehr in der Familie")}else throw e}}
     const uid=SY.auth.uid, fresh=!!SY.meta.fresh;
+    if(!SY.meta.userDoc){await fsPatch(`users/${uid}`,{name:SY.name||"",email:SY.auth.email||""});SY.meta.userDoc=1}
     // 2) Persönliche Daten: erst holen (bei neuer Anmeldung gewinnt die Cloud), dann eigene Änderungen hochladen
     const rem=await fsChanged(`users/${uid}`,"data",fresh?0:(SY.meta.pd||0)-120000);
     rem.sort((a,b)=>a.u-b.u).forEach(d=>{

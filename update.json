@@ -1,6 +1,6 @@
 {
-  "versionCode": 9,
-  "versionName": "2.5",
-  "apk": "https://raw.githubusercontent.com/TotesTierux/nutrifit/main/apk/NutriFit-2.5.apk",
-  "notes": "Neuer Bereich „Planer“: Wochenplan, Einkaufsliste und Rezepte\n24 Rezeptvorschläge plus KI-Rezepte mit Gemini\nKonto per E-Mail – Daten auf allen Geräten\nFamilie gründen und Plan, Liste und Rezepte gemeinsam nutzen\nFirebase ist fest eingerichtet – einfach registrieren"
+  "versionCode": 10,
+  "versionName": "2.6",
+  "apk": "https://raw.githubusercontent.com/TotesTierux/nutrifit/main/apk/NutriFit-2.6.apk",
+  "notes": "Familie gründen und beitreten funktioniert jetzt\nPlaner: Wochenplan, Einkaufsliste und Rezepte\nKonto per E-Mail – Daten auf allen Geräten"
 }
